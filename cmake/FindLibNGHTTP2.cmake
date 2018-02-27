@@ -23,7 +23,7 @@ find_path(LibNGHTTP2_ROOT_DIR
 
 find_path(LibNGHTTP2_INCLUDE_DIR
     NAMES nghttp2.h nghttp2ver.h
-    HINTS ${LibNGHTTP2_ROOT_DIR}/include/nghttp2/
+    HINTS ${LibNGHTTP2_ROOT_DIR}/include/nghttp2/ /usr/include/nghttp2/
 )
 
 find_library(LibNGHTTP2_LIBRARIES
