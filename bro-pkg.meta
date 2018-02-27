@@ -1,0 +1,7 @@
+[package]
+description = A HTTP2 protocol analyzer for the Bro IDS.
+tags = bro plugin, protocol analyzer, http2
+script_dir = scripts
+depends = bro >=2.5.0
+external_depends = libnghttp2>=1.11.0 libbrotlidec>=1.0.0
+

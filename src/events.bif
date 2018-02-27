@@ -1,0 +1,431 @@
+
+# In this file, you'll define the events that your analyzer will
+# generate. A sample event is included.
+
+## Generated for HTTP2 requests. Bro supports persistent and pipelined HTTP2
+## sessions and raises corresponding events as it parses client/server
+## dialogues. This event is generated as soon as a request's initial line has
+## been parsed, and before any :bro:id:`http2_header` events are raised.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## method: The HTTP2 method extracted from the request (e.g., ``GET``, ``POST``).
+##
+## authority: request URI's authority.
+##
+## host: request host.
+##
+## original_URI: The unprocessed URI as specified in the request.
+##
+## unescaped_URI: The URI with all percent-encodings decoded.
+##
+## version: The version number specified in the request (e.g., ``2.0``).
+##
+## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+##    http2_entity_data http2_event http2_header http2_message_done http2_reply http2_stats
+##    truncate_http2_URI
+event http2_request%(c: connection, is_orig: bool, stream: count, method: string, authority: string, host: string, original_URI: string, unescaped_URI: string, version: string%);
+
+## Generated for HTTP2 replies. Bro supports persistent and pipelined HTTP2
+## sessions and raises corresponding events as it parses client/server
+## dialogues. This event is generated as soon as a reply's initial line has
+## been parsed, and before any :bro:id:`http2_header` events are raised.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## version: The version number specified in the reply (e.g., ``2.0``).
+##
+## code: The numerical response code returned by the server.
+##
+## reason: The textual description returned by the server along with *code*.
+##
+## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+##    http2_entity_data http2_event http2_header http2_message_done http2_request
+##    http2_stats
+event http2_reply%(c: connection, is_orig: bool, stream: count, version: string, code: count, reason: string%);
+
+## Generated upon stream creation.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+##
+event http2_stream_start%(c: connection, is_orig: bool, stream:count%);
+
+## Generated upon completion of request processing and reply.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## http2_stream_stat: Information specific to the associated stream.
+##
+##
+event http2_stream_end%(c: connection, stream: count, stats: http2_stream_stat%);
+
+## Generated for HTTP2 headers. Bro supports persistent and pipelined HTTP2
+## sessions and raises corresponding events as it parses client/server
+## dialogues.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## name: The name of the header.
+##
+## value: The value of the header.
+##
+## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+##    http2_entity_data http2_event  http2_message_done http2_reply http2_request
+##    http2_stats
+##
+## .. note:: This event is also raised for headers found in nested body
+##    entities.
+event http2_header%(c: connection, is_orig: bool, stream: count, name: string, value: string%);
+
+## Generated for HTTP2 headers, passing on all headers of an HTTP2 message at
+## once. Bro supports persistent and pipelined HTTP2 sessions and raises
+## corresponding events as it parses client/server dialogues.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## hlist: A *table* containing all headers extracted from the current entity.
+##        The table is indexed by the position of the header (1 for the first,
+##        2 for the second, etc.).
+##
+## .. bro:see::  http2_begin_entity http2_content_type http2_end_entity http2_entity_data
+##    http2_event http2_header http2_message_done http2_reply http2_request http2_stats
+##
+## .. note:: This event is also raised for headers found in nested body
+##    entities.
+event http2_all_headers%(c: connection, is_orig: bool, stream: count, hlist: mime_header_list%);
+
+## Generated when starting to parse an HTTP2 body entity. This event is generated
+## at least once for each non-empty (client or server) HTTP2 body; and
+## potentially more than once if the body contains further nested MIME
+## entities. Bro raises this event just before it starts parsing each entity's
+## content.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+##
+## .. bro:see:: http2_all_headers  http2_content_type http2_end_entity http2_entity_data
+##    http2_event http2_header http2_message_done http2_reply http2_request http2_stats
+##    mime_begin_entity
+event http2_begin_entity%(c: connection, is_orig: bool, stream: count, contentType: string%);
+
+## Generated when finishing parsing an HTTP2 body entity. This event is generated
+## at least once for each non-empty (client or server) HTTP2 body; and
+## potentially more than once if the body contains further nested MIME
+## entities. Bro raises this event at the point when it has finished parsing an
+## entity's content.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+##
+## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_entity_data
+##    http2_event http2_header http2_message_done http2_reply http2_request
+##    http2_stats   mime_end_entity
+event http2_end_entity%(c: connection, is_orig: bool, stream: count%);
+
+## Generated when parsing an HTTP2 body entity, passing on the data. This event
+## can potentially be raised many times for each entity, each time passing a
+## chunk of the data of not further defined size.
+##
+## A common idiom for using this event is to first *reassemble* the data
+## at the scripting layer by concatenating it to a successively growing
+## string; and only perform further content analysis once the corresponding
+## :bro:id:`http2_end_entity` event has been raised. Note, however, that doing so
+## can be quite expensive for HTTP2 tranders. At the very least, one should
+## impose an upper size limit on how much data is being buffered.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+##
+## length: The length of *data*.
+##
+## data: One chunk of raw entity data.
+##
+## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+##    http2_event http2_header http2_message_done http2_reply http2_request http2_stats
+##    mime_entity_data http2_entity_data_delivery_size skip_http2_data
+event http2_entity_data%(c: connection, is_orig: bool, stream: count, length: count, data: string%);
+
+## Generated for reporting an HTTP2 body's content type.  This event is
+## generated at the end of parsing an HTTP2 header, passing on the MIME
+## type as specified by the ``Content-Type`` header. If that header is
+## missing, this event is still raised with a default value of ``text/plain``.
+##
+## See `Wikipedia <http://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol>`__
+## for more information about the HTTP protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## contentType: The main type.
+##
+event http2_content_type%(c: connection, is_orig: bool, stream: count, contentType: string%);
+
+## Generated once at the end of parsing an HTTP2 message. Bro supports persistent
+## and pipelined HTTP2 sessions and raises corresponding events as it parses
+## client/server dialogues. A "message" is one top-level HTTP2 entity, such as a
+## complete request or reply. Each message can have further nested sub-entities
+## inside. This event is raised once all sub-entities belonging to a top-level
+## message have been processed (and their corresponding ``http2_entity_*`` events
+## generated).
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection.
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## stat: Further meta information about the message.
+##
+## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+##    http2_entity_data http2_event http2_header  http2_reply http2_request http2_stats
+##event http2_message_done%(c: connection, is_orig: bool, stream: count, stat: http_message_stat%);
+
+## Generated for http2 connections
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+event http2_event%(c: connection, category: string, detail: string%);
+
+# Individual (mostly) Raw Frame Events -- shouldn't be called unless needed since they will be noisy!
+
+## Generated upon reception and successful processing of a data frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## length: The content encoding type of the data message
+##
+## data: The content encoding type of the data message
+##
+event http2_data_event%(c: connection, is_orig: bool, stream: count, length: count, data: string%);
+
+## Generated upon reception and successful processing of a header frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## length: length of the frame header.
+##
+## data: contents of the frame header.
+##
+event http2_header_event%(c: connection, is_orig: bool, stream: count, length: count, data: string%);
+
+## Generated upon reception and successful processing of a priority frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## exclusive: flag indicating whether or not the stream dependency is exclusive.
+##
+## priStream: identifier for the stream upon which this stream depends.
+##
+## weight: priority weight for the stream
+##
+event http2_priority_event%(c: connection, is_orig: bool, stream: count, exclusive: bool, priStream: count, weight: count%);
+
+## Generated upon reception and successful processing of a reset stream frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## error: Indication of why the stream was terminated.
+##
+event http2_rststream_event%(c: connection, is_orig: bool, stream: count, error: string%);
+
+## Generated upon reception and successful processing of a settings frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## http2_settings: .
+##
+event http2_settings_event%(c: connection, is_orig: bool, stream: count, settings: http2_settings%);
+
+## Generated upon reception and successful processing of a push promise frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## pushStream: identifies the stream that is reserved by the PUSH_PROMISE.
+##
+## length: length of the frame header.
+##
+## data: contents of the frame header.
+##
+event http2_pushpromise_event%(c: connection, is_orig: bool, stream: count, pushStream: count, length: count, data: string%);
+
+## Generated upon reception and successful processing of a ping frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## data: the 8 byte data payload of the ping frame.
+##
+event http2_ping_event%(c: connection, is_orig: bool, stream: count, data: string%);
+
+## Generated upon reception and successful processing of a go away frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## lastStream: the highest-numbered stream identifier for which the sender of 
+##	           the GOAWAY frame might have taken some action on or might yet 
+##	           take action on
+##
+## error: the reason for closing the connection.
+##
+event http2_goaway_event%(c: connection, is_orig: bool, stream: count, lastStream: count, error: string%);
+
+## Generated upon reception and successful processing of a window update frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## increment: the number of octets that the sender can transmit in addition 
+##            to the existing flow-control window
+##
+event http2_windowupdate_event%(c: connection, is_orig: bool, stream: count, increment: count%);
+
+## Generated upon reception and successful processing of a continuation frame.
+##
+## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
+## for more information about the HTTP2 protocol.
+##
+## c: The connection
+##
+## is_orig: True if the entity was sent by the originator of the TCP connection.
+##
+## stream: Unique identifier of the stream within its associated connection.
+##
+## length: length of the frame header.
+##
+## data: contents of the frame header.
+##
+event http2_continuation_event%(c: connection, is_orig: bool, stream: count, length: count, data:string%);
+
+

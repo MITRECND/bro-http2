@@ -1,0 +1,3 @@
+type http2_settings_unrecognized_table: table;
+type http2_settings: record;
+type http2_stream_stat: record;
