@@ -70,6 +70,9 @@ export {
         ## Indicates if this request can assume 206 partial content in
         ## response.
         range_request:           bool      &default=F;
+
+        ## Whether this was a push transaction
+        push:                    bool      &log &default=F;
     };
 
     type Streams: record {
@@ -144,13 +147,14 @@ event http2_stream_start(c: connection, is_orig: bool, stream: count) &priority=
 
 event http2_request(c: connection, is_orig: bool, stream: count, method: string, 
                     authority: string, host: string, original_URI: string,
-                    unescaped_URI: string, version: string) &priority=5
+                    unescaped_URI: string, version: string, push: bool) &priority=5
 {
     add c$http2_streams$has_data[stream];
     c$http2_streams$streams[stream]$method = method;
     c$http2_streams$streams[stream]$host = host;
     c$http2_streams$streams[stream]$uri = unescaped_URI;
     c$http2_streams$streams[stream]$version = version;
+    c$http2_streams$streams[stream]$push = push;
 
     if ( method !in HTTP::http_methods )
         event conn_weird("unknown_HTTP2_method", c, method);

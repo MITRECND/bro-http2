@@ -28,10 +28,12 @@
 ##
 ## version: The version number specified in the request (e.g., ``2.0``).
 ##
+## push: Whether this was a push promise initiated transaction
+##
 ## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
 ##    http2_entity_data http2_event http2_header http2_message_done http2_reply http2_stats
 ##    truncate_http2_URI
-event http2_request%(c: connection, is_orig: bool, stream: count, method: string, authority: string, host: string, original_URI: string, unescaped_URI: string, version: string%);
+event http2_request%(c: connection, is_orig: bool, stream: count, method: string, authority: string, host: string, original_URI: string, unescaped_URI: string, version: string, push: bool%);
 
 ## Generated for HTTP2 replies. Bro supports persistent and pipelined HTTP2
 ## sessions and raises corresponding events as it parses client/server

@@ -86,7 +86,8 @@ public:
     /**
      * void HTTP2_Analyzer::HTTP2_Request(bool orig, unsigned
      * stream, std::string method, std::string authority,
-     * std::string  host, std::string path,  Val*  unescaped)
+     * std::string  host, std::string path,  Val*  unescaped,
+     * bool push=false)
      * 
      * Description: Notification to Bro that an HTTP2 Request event
      * has occurred.
@@ -100,10 +101,12 @@ public:
      * @param host      description of the request host
      * @param path      description of the request path
      * @param unescaped description of the request unescaped path
+     * @param push      Whether this is a push promise transaction or not
      */
     void HTTP2_Request(bool orig, unsigned stream, std::string& method, 
                        std::string& authority, std::string&  host, 
-                       std::string& path,  BroString*  unescaped);
+                       std::string& path,  BroString*  unescaped,
+                       bool push=false);
     /**
      * void HTTP2_Analyzer::HTTP2_Reply(bool orig, unsigned stream, Val *status)
      * 

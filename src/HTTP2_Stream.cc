@@ -133,14 +133,23 @@ void HTTP2_HalfStream::extractDataInfoHeaders(std::string& name, std::string& va
         this->contentType = value;
     }
     else if (name.find("content-length") != std::string::npos){
-        this->contentLength = std::stoi(value);
+        try {
+            this->contentLength = std::stoi(value);
+        }
+        catch (std::invalid_argument&) {
+            this->analyzer->Weird("Invalid content-length value!");
+        }
+        catch (std::out_of_range&) {
+            this->analyzer->Weird("Out of range content-length value!");
+        }
     }
 }
 
 void HTTP2_HalfStream::SubmitData(int len, const char* buf){
         
     // if partial data
-    if (this->contentLength>0 && len<this->contentLength) {
+    if ((this->send_size && this->contentLength > 0 && len < this->contentLength)
+        || !this->send_size) {
         file_mgr->DataIn(reinterpret_cast<const u_char*>(buf), len, this->dataOffset,
                          this->analyzer->GetAnalyzerTag(), this->analyzer->Conn(),
                          this->isOrig, this->precomputed_file_id);
@@ -310,14 +319,39 @@ void HTTP2_OrigStream::handlePeerEndStream(void)
     }
 }
 
-void HTTP2_OrigStream::handlePushRequested(void) 
+void HTTP2_OrigStream::handlePushRequested(HTTP2_Frame* frame)
 {
-    // There is no client side to a push promise
-    // only a response
-    this->handleEndStream();
-    this->state = HTTP2_STREAM_STATE_HALF_CLOSED;
-}
+    HTTP2_Header_Frame_Base* header = static_cast<HTTP2_Header_Frame_Base*>(frame);
+    this->ProcessHeaderBlock(header);
 
+    // Finished processing headers send request and advance the state
+    if (header->isEndHeaders()) {
+        //Request
+        if(http2_request) {
+            // unescape_URI will return a 'new' BroString, but
+            // a StringVal init'd with a BroString takes ownership of the BroString
+            BroString* unescapedPath = analyzer::http::unescape_URI((const unsigned char*)this->request_path.c_str(),
+                                                                    (const unsigned char*)(this->request_path.c_str() + this->request_path.length()),
+                                                                    this->analyzer);
+
+            this->analyzer->HTTP2_Request(this->isOrig, this->id, this->request_method,
+                                          this->request_authority, this->request_host,
+                                          this->request_path, unescapedPath, true);
+        }
+
+        // Send all buffered headers
+        if ( http2_all_headers ) {
+            this->analyzer->HTTP2_AllHeaders(this->isOrig, this->id, this->hlist.BuildHeaderTable());
+            // Flush the headers since no longer necessary
+            this->hlist.flushHeaders();
+        }
+
+        // There is no client body to a push promise
+        // only headers
+        this->state = HTTP2_STREAM_STATE_HALF_CLOSED;
+        this->handleEndStream();
+    } // else expect continuation frames
+}
 
 void HTTP2_OrigStream::ProcessHeaderBlock(HTTP2_Header_Frame_Base* header)
 {
@@ -561,14 +595,14 @@ void HTTP2_RespStream::handlePeerEndStream(void)
     }
 }
 
-void HTTP2_RespStream::handlePushRequested(void) 
+void HTTP2_RespStream::handlePushRequested(HTTP2_Frame* frame)
 {
     // This should be an error if client sends a pp. There is no client side
     // to a push promise only a response.
     this->analyzer->Weird("Client sent push promise, unexpected behavior");
     DEBUG_ERR("Invalid Push Promise From Client Side\n");
-    this->handleEndStream();
     this->state = HTTP2_STREAM_STATE_HALF_CLOSED;
+    this->handleEndStream();
 }
 
 void HTTP2_RespStream::ProcessHeaderBlock(HTTP2_Header_Frame_Base* header)
@@ -582,11 +616,21 @@ void HTTP2_RespStream::ProcessHeaderBlock(HTTP2_Header_Frame_Base* header)
         if (name[0] == ':') {
             // Determine if this is one of the Pseudo Headers
             if (name == ":status") {
-                int32_t code = std::stoi(value);
+                int32_t code = 0;
+                try {
+                    code = std::stoi(value);
+                }
+                catch (std::invalid_argument&) {
+                    this->analyzer->Weird("Invalid status code!");
+                }
+                catch (std::out_of_range&) {
+                    this->analyzer->Weird("Out of range status code!");
+                }
                 if (code < 0 || code > 999) {
                     this->analyzer->Weird("Reply code unexpected value");
                 }
-                this->reply_status = static_cast<uint16_t>(code);
+                else
+                    this->reply_status = static_cast<uint16_t>(code);
             } else {
                 this->analyzer->Weird("Unexpected pseudo header");
                 if (http2_header) {
@@ -661,7 +705,7 @@ void HTTP2_RespStream::Idle_State(HTTP2_Frame* frame)
             break;
         }
         case NGHTTP2_DATA:
-            this->analyzer->Weird("Received data from while in the 'idle' state");
+            this->analyzer->Weird("Received data frame while in the 'idle' state [resp]");
             break;
         // These are not allowed in a stream
         case NGHTTP2_SETTINGS:
@@ -761,10 +805,23 @@ HTTP2_Stream::~HTTP2_Stream()
 }
 
 bool HTTP2_Stream::handleFrame(HTTP2_Frame* f, bool orig) {
-    this->halfStreams[orig]->handleFrame(f);
 
-    if (f->getType() == NGHTTP2_PUSH_PROMISE){
-        this->halfStreams[!orig]->handlePushRequested();
+    if (!this->handlingPush) {
+        if (f->getType() == NGHTTP2_PUSH_PROMISE){
+            this->handlingPush = true;
+            this->halfStreams[!orig]->handlePushRequested(f);
+        } else {
+            this->halfStreams[orig]->handleFrame(f);
+        }
+    } else { //handling a push, should only be continuation, otherwise the push is over
+        if (f->getType() != NGHTTP2_CONTINUATION) {
+            // during a push it should only be PP and Cont frames
+            // if following spec this should be a header frame
+            this->handlingPush = false;
+            this->halfStreams[orig]->handleFrame(f);
+        } else { //continuation frame, continue handling push
+            this->halfStreams[!orig]->handlePushRequested(f);
+        }
     }
 
     if (f->getType() == NGHTTP2_RST_STREAM){

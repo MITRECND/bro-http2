@@ -189,7 +189,7 @@ HTTP2_Data_Frame::HTTP2_Data_Frame(HTTP2_FrameHeader* h, uint8_t* payload, uint3
         return;
     }
 
-    memcpy(this->dataMsg, payload, this->dataLength);
+    memcpy(this->dataMsg, cursor, this->dataLength);
 
     this->valid = true;
 }

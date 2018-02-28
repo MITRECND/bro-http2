@@ -120,71 +120,66 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
     }
     printf("\n");
 #endif
-    try{
-        prefaceOffset = 0;
-        // Evaluate incoming data to determine if it is HTTP2 protocol or not
-        if (!this->connectionActive) {
-            this->connectionActive = connectionPrefaceDetected(len, data);
-            if(this->connectionActive){
-                // Skip the preface and process what comes after it.
-                prefaceOffset = CONN_PREFACE_LENGTH; 
-                this->request_version = this->reply_version = 2.0;
-                // Allocate hpack inflaters
-                this->initInflaters();
-                // Create the stream mapping objects -- inflaters are passed to streams
-                this->initStreams();
-                // Create frame reassemblers which will stitch frames together
-                this->initReassemblers();
-                ProtocolConfirmation(); // Notify system that this is HTTP2.
-                DEBUG_INFO("Connection Preface Detected: [%p]!\n", Conn());
-            }
-        }
-        // If the connection is HTTP2
-        if (this->connectionActive) {
-            vector<HTTP2_Frame*> frames = this->reassemblers[orig].process(&data[prefaceOffset], (len - prefaceOffset));
-            // Frame memory is callee handled so clean it up after use
-            for (vector<HTTP2_Frame*>::iterator it = frames.begin(); it != frames.end(); ++it){
-                if(*it == nullptr) {
-                    // Reassembler will ensure last frame pointer is null, so no other, valid,
-                    // frames should be present that need to be to be handled/deleted
-                    ProtocolViolation("Unable to parse http 2 frame from data stream, fatal error");
-                    this->protocol_errored = true;
-                    return;
-                }
-
-                HTTP2_Frame* frame = *it;
-
-                uint32_t stream_id = 0;
-                // Push Promise is a special case
-                // since it provides the id of the new stream in the payload
-                if (frame->getType() == NGHTTP2_PUSH_PROMISE) {
-                    stream_id = static_cast<HTTP2_PushPromise_Frame*>(frame)->getPromisedStreamId();
-                } else {
-                    stream_id = frame->getStreamId();
-                }
-
-                this->handleFrameEvents(frame, orig, stream_id);
-
-                if (stream_id == 0) {
-                    this->handleStream0(frame, orig);
-                } else {
-                    HTTP2_Stream* stream = this->getStream(stream_id, orig);
-                    if (stream != nullptr) {
-                        bool closed = stream->handleFrame(frame, orig);
-                        if (closed){
-                            if (http2_stream_end) {
-                                stream->handleStreamEnd();
-                            }
-                            this->removeStream(stream);
-                        }
-                    } 
-                }
-                delete (frame);
-            }
+    prefaceOffset = 0;
+    // Evaluate incoming data to determine if it is HTTP2 protocol or not
+    if (!this->connectionActive) {
+        this->connectionActive = connectionPrefaceDetected(len, data);
+        if(this->connectionActive){
+            // Skip the preface and process what comes after it.
+            prefaceOffset = CONN_PREFACE_LENGTH;
+            this->request_version = this->reply_version = 2.0;
+            // Allocate hpack inflaters
+            this->initInflaters();
+            // Create the stream mapping objects -- inflaters are passed to streams
+            this->initStreams();
+            // Create frame reassemblers which will stitch frames together
+            this->initReassemblers();
+            ProtocolConfirmation(); // Notify system that this is HTTP2.
+            DEBUG_INFO("Connection Preface Detected: [%p]!\n", Conn());
         }
     }
-    catch (exception& e ){
-        DEBUG_ERR("Exception: %s\n", e.what());
+    // If the connection is HTTP2
+    if (this->connectionActive) {
+        vector<HTTP2_Frame*> frames = this->reassemblers[orig].process(&data[prefaceOffset], (len - prefaceOffset));
+        // Frame memory is callee handled so clean it up after use
+        for (vector<HTTP2_Frame*>::iterator it = frames.begin(); it != frames.end(); ++it){
+            if(*it == nullptr) {
+                // Reassembler will ensure last frame pointer is null, so no other, valid,
+                // frames should be present that need to be to be handled/deleted
+                ProtocolViolation("Unable to parse http 2 frame from data stream, fatal error");
+                this->protocol_errored = true;
+                return;
+            }
+
+            HTTP2_Frame* frame = *it;
+
+            uint32_t stream_id = 0;
+            // Push Promise is a special case
+            // since it provides the id of the new stream in the payload
+            if (frame->getType() == NGHTTP2_PUSH_PROMISE) {
+                stream_id = static_cast<HTTP2_PushPromise_Frame*>(frame)->getPromisedStreamId();
+            } else {
+                stream_id = frame->getStreamId();
+            }
+
+            this->handleFrameEvents(frame, orig, stream_id);
+
+            if (stream_id == 0) {
+                this->handleStream0(frame, orig);
+            } else {
+                HTTP2_Stream* stream = this->getStream(stream_id, orig);
+                if (stream != nullptr) {
+                    bool closed = stream->handleFrame(frame, orig);
+                    if (closed){
+                        if (http2_stream_end) {
+                            stream->handleStreamEnd();
+                        }
+                        this->removeStream(stream);
+                    }
+                }
+            }
+            delete (frame);
+        }
     }
 }
 
@@ -519,7 +514,7 @@ bool HTTP2_Analyzer::connectionPrefaceDetected(int len, const u_char* data)
 */
 void HTTP2_Analyzer::HTTP2_Request(bool orig, unsigned stream, std::string& method, 
                                    std::string& authority, std::string& host, 
-                                   std::string& path, BroString* unescaped){
+                                   std::string& path, BroString* unescaped, bool push){
     //this->num_requests++;
     if ( http2_request ){
         val_list* vl = new val_list;
@@ -532,6 +527,7 @@ void HTTP2_Analyzer::HTTP2_Request(bool orig, unsigned stream, std::string& meth
         vl->append(new StringVal(path));
         vl->append(new StringVal(unescaped));
         vl->append(new StringVal(fmt("%.1f", 2.0)));
+        vl->append(new Val(push, TYPE_BOOL));
         DEBUG_DBG("[%3u][%1d] http2_request\n", stream, orig);
         this->ConnectionEvent(http2_request, vl);
     }

@@ -51,7 +51,7 @@ public:
     virtual ~HTTP2_HalfStream();
     virtual void handleFrame(HTTP2_Frame* frame) = 0;
     virtual void handlePeerEndStream(void) = 0;
-    virtual void handlePushRequested(void) = 0;
+    virtual void handlePushRequested(HTTP2_Frame* frame) = 0;
     bool isStreamEnded(void){return this->endStreamDetected;};
     bool isClosed(void){return this->state == HTTP2_STREAM_STATE_CLOSED;};
     size_t getDataSize(void) const {return this->data_size;};
@@ -210,17 +210,18 @@ public:
      */
     void handleFrame(HTTP2_Frame* frame);
     /**
-     * void handlePushRequested(void)
+     * void handlePushRequested(frame)
      * 
      * Description: A Push Promise frame is only sent by the
-     *  server and implies there is no header or data from the
-     *  client. This function allows the client side to move to a
+     *  server and implies there is no data from the
+     *  client. This function allows the client side to process
+     *  the server provided client headers and move to a
      *  different state
      *
      * 
      * @param void 
      */
-    void handlePushRequested(void);
+    void handlePushRequested(HTTP2_Frame* frame);
     /**
      * void handlePeerEndStream(void)
      * 
@@ -272,7 +273,7 @@ public:
      * 
      * @param void 
      */
-    void handlePushRequested(void);
+    void handlePushRequested(HTTP2_Frame* frame);
     /**
      * void handlePeerEndStream(void)
      * 
@@ -320,6 +321,7 @@ protected:
 
 private:
     uint32_t id;
+    bool handlingPush=false;
     bool streamReset;
     bool streamResetter;
     HTTP2_Analyzer* analyzer;
