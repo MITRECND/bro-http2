@@ -3,7 +3,7 @@ http2::HTTP2
 =================================
 
 This plugin provides an HTTP2 (RFC 7540 - https://tools.ietf.org/html/rfc7540)
-decoder/analyzer for Bro.
+decoder/analyzer for Bro (https://www.bro.org/).
 
 The events exposed attempt to mimic the events exposed by the native HTTP analyzer
 
