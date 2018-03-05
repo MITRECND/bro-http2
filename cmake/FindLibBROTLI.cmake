@@ -18,11 +18,11 @@
 #  LibBROTLI_INCLUDE_DIR        The location of LibBROTLI headers
 
 find_path(LibBROTLI_ROOT_DIR
-    NAMES include decode.h encode.h port.h types.h
+    NAMES include/brotli/decode.h include/brotli/encode.h
 )
 
 find_path(LibBROTLI_INCLUDE_DIR
-    NAMES decode.h encode.h port.h types.h
+    NAMES decode.h encode.h
     HINTS ${LibBROTLI_ROOT_DIR}/include/brotli
 )
 
