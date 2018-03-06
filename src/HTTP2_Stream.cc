@@ -846,8 +846,12 @@ bool HTTP2_Stream::handleStreamEnd() {
     if (http2_stream_end) {
         RecordVal* stream_stats = new RecordVal(BifType::Record::http2_stream_stat);
         // process is_orig == true first
-        stream_stats->Assign(0, new Val(this->halfStreams[1]->getDataSize(), TYPE_COUNT));
-        stream_stats->Assign(1, new Val(this->halfStreams[0]->getDataSize(), TYPE_COUNT));
+        stream_stats->Assign(0, new Val(static_cast<uint64_t>\
+                                        (this->halfStreams[1]->getDataSize()),
+                             TYPE_COUNT));
+        stream_stats->Assign(1, new Val(static_cast<uint64_t>\
+                                        (this->halfStreams[0]->getDataSize()),
+                             TYPE_COUNT));
         this->analyzer->HTTP2_StreamEnd(this->id, stream_stats);
     }
 

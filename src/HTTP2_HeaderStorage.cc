@@ -31,7 +31,7 @@ HTTP2_HeaderList::~HTTP2_HeaderList()
 
 void HTTP2_HeaderList::addHeader(std::string& name, std::string& value)
 {
-    this->addHeader(std::move(HTTP2_HeaderStorage(name, value)));
+    this->addHeader(HTTP2_HeaderStorage(name, value));
 }
 
 void HTTP2_HeaderList::addHeader(HTTP2_HeaderStorage& header)
