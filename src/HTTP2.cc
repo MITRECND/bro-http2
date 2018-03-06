@@ -415,7 +415,7 @@ HTTP2_Stream* HTTP2_Analyzer::getStream(uint32_t stream_id, bool orig)
 
         this->lastStreams[orig] = stream_id;
         stream = new HTTP2_Stream(this, stream_id, this->inflaters);
-        this->streams.insert(std::move(std::pair<uint32_t, HTTP2_Stream*>(stream_id, stream)));
+        this->streams.insert(std::pair<uint32_t, HTTP2_Stream*>(stream_id, stream));
         if (http2_stream_start) {
             this->HTTP2_StreamStart(orig, stream_id);
         }
