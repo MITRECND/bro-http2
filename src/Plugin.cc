@@ -14,7 +14,7 @@ public:
         plugin::Configuration config;
         config.name = "http2::HTTP2";
         config.version.major = 0;
-        config.version.minor = 1;
+        config.version.minor = 2;
         config.description = "Hypertext Transfer Protocol Version 2 analyzer";
         return config;
         }
