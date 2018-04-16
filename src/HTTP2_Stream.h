@@ -13,7 +13,7 @@
 
 using namespace std;
 
-namespace analyzer { namespace http2 {
+namespace analyzer { namespace mitrecnd {
 /* The currently supported stream states as specified in RFC-7540
  */
 enum StreamState {

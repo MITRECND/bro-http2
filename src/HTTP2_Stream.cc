@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "Reporter.h"
 
-using namespace analyzer::http2;                    
+using namespace analyzer::mitrecnd;
 
 /**
  * HTTP2_Stream::UncompressedOutput : public analyzer::OutputHandler

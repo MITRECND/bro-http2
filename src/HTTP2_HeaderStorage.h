@@ -12,7 +12,7 @@
 
 using namespace std;
 
-namespace analyzer { namespace http2 {
+namespace analyzer { namespace mitrecnd {
 
 struct HTTP2_HeaderStorage {
     HTTP2_HeaderStorage(std::string& name, std::string& value);

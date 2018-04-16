@@ -9,7 +9,7 @@
 #include "debug.h"
 #include "Reporter.h"
 
-using namespace analyzer::http2;
+using namespace analyzer::mitrecnd;
 
 const bool DEBUG_http2 = true;
 

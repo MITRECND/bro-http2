@@ -5,7 +5,7 @@ static constexpr size_t MAX_FRAME_SIZE = 16777215;
 
 #include "util.h"
 
-namespace analyzer { namespace http2 {
+namespace analyzer { namespace mitrecnd {
 
 struct RawFrameHeader
 {
