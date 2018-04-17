@@ -1,0 +1,9 @@
+mitrecnd::HTTP2
+=================================
+
+This plugin provides an HTTP2 ([RFC 7540](https://tools.ietf.org/html/rfc7540))
+decoder/analyzer for [Bro](https://www.bro.org/).
+
+The events exposed attempt to mimic the events exposed by the native HTTP analyzer
+Please read README.md in the source distro or on github at
+https://github.com/MITRECND/bro-http2 for more information

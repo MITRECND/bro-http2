@@ -50,7 +50,7 @@ bro_plugin_cc(src/HTTP2_HeaderStorage.cc)
 bro_plugin_cc(src/HTTP2_Stream.cc)
 bro_plugin_cc(src/HTTP2.cc)
 bro_plugin_bif(src/events.bif src/http2.bif)
-bro_plugin_dist_files(README VERSION)
+bro_plugin_dist_files(COPYING LICENSE README README.md VERSION)
 bro_plugin_link_library(${LibNGHTTP2_LIBRARIES})
 bro_plugin_end()
 
