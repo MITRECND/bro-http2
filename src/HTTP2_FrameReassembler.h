@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-namespace analyzer { namespace http2 {
+namespace analyzer { namespace mitrecnd {
 
 static constexpr size_t MIN_BUFFER_SIZE = 65535;
 static constexpr size_t MAX_BUFFER_SIZE = 33554430; // ~32MB!!!

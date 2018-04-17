@@ -24,7 +24,7 @@
 
 using namespace std;
 
-namespace analyzer { namespace http2 {
+namespace analyzer { namespace mitrecnd {
 
 
 class HTTP2_Stream;

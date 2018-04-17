@@ -11,7 +11,7 @@
 #include "debug.h"
 #include "Reporter.h"
 
-using namespace analyzer::http2;
+using namespace analyzer::mitrecnd;
 
 static inline uint32_t ntoh24(uint8_t* data)
 {

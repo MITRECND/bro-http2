@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "Reporter.h"
 
-using namespace analyzer::http2;
+using namespace analyzer::mitrecnd;
 
 HTTP2_HeaderStorage::HTTP2_HeaderStorage(std::string& name, std::string& value)
 {

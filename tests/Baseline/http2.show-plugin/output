@@ -1,0 +1,27 @@
+mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.3)
+    [Analyzer] HTTP2 (ANALYZER_HTTP2, enabled)
+    [Event] http2_request
+    [Event] http2_reply
+    [Event] http2_stream_start
+    [Event] http2_stream_end
+    [Event] http2_header
+    [Event] http2_all_headers
+    [Event] http2_begin_entity
+    [Event] http2_end_entity
+    [Event] http2_entity_data
+    [Event] http2_content_type
+    [Event] http2_event
+    [Event] http2_data_event
+    [Event] http2_header_event
+    [Event] http2_priority_event
+    [Event] http2_rststream_event
+    [Event] http2_settings_event
+    [Event] http2_pushpromise_event
+    [Event] http2_ping_event
+    [Event] http2_goaway_event
+    [Event] http2_windowupdate_event
+    [Event] http2_continuation_event
+    [Type] http2_settings_unrecognized_table
+    [Type] http2_settings
+    [Type] http2_stream_stat
+
