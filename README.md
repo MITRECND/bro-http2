@@ -68,6 +68,29 @@ restarting your cluster:
 
     <bro_install_root>/lib/bro/plugins/http2_HTTP2
 
+
+### Bro Package Manager
+
+The Bro Package Manager can be used to install
+this plugin in multiple ways:
+
+* From the repo clone directory:
+```
+    # bro-pkg install .
+```
+
+* Using the github repo directly:
+```
+    # bro-pkg install https://github.com/MITRECND/bro-http2
+```
+
+* Using the official source (FUTURE):
+```
+    # bro-pkg install bro/mitrecnd/bro-http2
+```
+
+## Usage
+
 You should see the following output from bro if successfully installed:
 
 ```
@@ -100,26 +123,6 @@ You should see the following output from bro if successfully installed:
         [Type] http2_stream_stat
 ```
 
-### Bro Package Manager
-
-The Bro Package Manager can be used to install
-this program in multiple ways:
-
-Install this plugin from the repo clone directory:
-
-    # bro-pkg install .
-
-Install this plugin using the github repo directly:
-
-    # bro-pkg install https://github.com/MITRECND/bro-http2
-
-Install this plugin using the official source (FUTURE):
-
-    # bro-pkg install bro/mitrecnd/bro-http2
-
-
-
-## Usage
 
 To use/load the http2 analyzer, add the following to your config
 (e.g., local.bro):
