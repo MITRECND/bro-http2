@@ -50,7 +50,7 @@ To manually build and install the plugin:
 You should see the following output from bro if successfully installed:
 
     > bro -NN mitrecnd::HTTP2
-    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.2)
+    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.3)
         [Analyzer] HTTP2 (ANALYZER_HTTP2, enabled)
         [Event] http2_request
         [Event] http2_reply
@@ -94,3 +94,8 @@ To use/load the http2 analyzer, add the following to your config:
     @load http2
 
 The analyzer will create a new log file called "http2.log"
+
+To use/load the http2 intel framework extensions add the following
+to your config:
+
+    @load http2/intel
