@@ -24,13 +24,15 @@ version.
 
     nghttp2 Library - https://github.com/nghttp2/nghttp2
 
-On Ubuntu 16.04:
-
-    # sudo apt-get install libnghttp2-dev
-
 On CentOS 7:
 
     # sudo yum install libnghttp2-devel
+
+On Ubuntu 16.04:
+
+The version of `libnghttp-dev` on Ubuntu's apt repositories is too
+old (version 1.7.1 as of when this was written) so you must install the library
+manually from the [repo](https://github.com/nghttp2/nghttp2/releases/latest).
 
 #### Brotli
 
