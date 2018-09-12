@@ -197,7 +197,7 @@ HTTP2_Data_Frame::HTTP2_Data_Frame(HTTP2_FrameHeader* h, uint8_t* payload, uint3
 HTTP2_Data_Frame::~HTTP2_Data_Frame(void)
 {
     if(this->dataMsg){
-        delete this->dataMsg;
+        delete[] this->dataMsg;
     }
 }
 
