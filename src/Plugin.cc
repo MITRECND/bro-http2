@@ -13,6 +13,6 @@ plugin::Configuration Plugin::Configure()
     config.description = "Hypertext Transfer Protocol Version 2 analyzer";
     config.name = "mitrecnd::HTTP2";
     config.version.major = 0;
-    config.version.minor = 3;
+    config.version.minor = 4;
     return config;
     }

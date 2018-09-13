@@ -97,7 +97,7 @@ You should see the following output from bro if successfully installed:
 
 ```
     > bro -NN mitrecnd::HTTP2
-    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.3)
+    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.4)
         [Analyzer] HTTP2 (ANALYZER_HTTP2, enabled)
         [Event] http2_request
         [Event] http2_reply
