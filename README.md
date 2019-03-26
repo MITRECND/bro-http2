@@ -86,7 +86,7 @@ this plugin in multiple ways:
     # bro-pkg install https://github.com/MITRECND/bro-http2
 ```
 
-* Using the official source (FUTURE):
+* Using the official source:
 ```
     # bro-pkg install bro/mitrecnd/bro-http2
 ```
