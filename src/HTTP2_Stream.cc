@@ -259,8 +259,8 @@ void HTTP2_HalfStream::translateBrotliBody(int len, const char* data)
 
         bytes_decompressed = BROTLI_BUFFER_SIZE - available_out;
 
-        if (available_in > 0) {
-            // reporter->Info("Left-over bytes after brotli decompression of stream");
+        if (result == BROTLI_DECODER_RESULT_SUCCESS
+                && available_in > 0) {
             this->analyzer->Weird("Unexpected left-over bytes in brotli decompression");
         }
 
