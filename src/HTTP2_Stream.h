@@ -14,6 +14,9 @@
 using namespace std;
 
 namespace analyzer { namespace mitrecnd {
+
+static constexpr size_t BROTLI_BUFFER_SIZE = 102400; // 100KB
+
 /* The currently supported stream states as specified in RFC-7540
  */
 enum StreamState {
@@ -66,24 +69,24 @@ protected:
     nghttp2_hd_inflater* inflater;
     /**
      * bool analyzer/http2/HTTP2_HalfStream::processHeaders(uint8_t **headerBlockFragmentPtr, uint32_t &len, bool endHeaders, string &name, string &value)
-     * 
+     *
      * Description: Uses the NGHTTP2 library to decompress the HTTP2
      * headers.
-     * 
-     * 
-     * @param headerBlockFragmentPtr pointer to start of the data 
+     *
+     *
+     * @param headerBlockFragmentPtr pointer to start of the data
      *                               stream representing the header
      *                               block to be processed.
      * @param len                    the length of the data stream.
-     * @param endHeaders             indication of whether or not 
+     * @param endHeaders             indication of whether or not
      *                               this is the end of the header
      *                               block.
-     * @param name                   Location to store the name of 
+     * @param name                   Location to store the name of
      *                               the next inflated header.
-     * @param value                  Location to store the value of 
+     * @param value                  Location to store the value of
      *                               the next inflated header.
-     * 
-     * @return bool                  indication of whether or not a 
+     *
+     * @return bool                  indication of whether or not a
      *                               header was found and
      *                               decompressed.
      */
@@ -95,22 +98,22 @@ protected:
     size_t data_size;
     zip::ZIP_Analyzer* zip;
     BrotliDecoderState* brotli;
-    uint8_t brotli_buffer[MAX_FRAME_SIZE];
+    uint8_t* brotli_buffer;
 
 
     /**
      * void SubmitData(int len, const char *buf)
-     * 
+     *
      * Description: Submission of clear data messages to the file
      * manager for post processing.
-     * 
+     *
      * @param len   The length of the message body.
      * @param buf   A reference to where the message body is stored.
      */
     void SubmitData(int len, const char* buf);
     /**
      * void EndofData(void)
-     * 
+     *
      * Description: Notification to file manager that the message
      * submission has been completed.
      *
@@ -118,55 +121,55 @@ protected:
     void EndofData(void);
     /**
      * void DeliverBody(int len, const char *data, int trailing_CRLF)
-     * 
+     *
      * Description: Orchestrates content type encoding specific
-     * processing on data frame message payloads. 
-     * 
-     * @param len 
-     * @param data 
-     * @param trailing_CRLF 
+     * processing on data frame message payloads.
+     *
+     * @param len
+     * @param data
+     * @param trailing_CRLF
      */
     void DeliverBody(int len, const char* data, int trailing_CRLF);
     /**
      * void DeliverBodyClear(int len, const char *data, int trailing_CRLF)
-     * 
-     * Description: Orchestrates processing of post processed (e.g. 
-     * clear text) data frame message payloads. 
-     * 
-     * @param len 
-     * @param data 
-     * @param trailing_CRLF 
+     *
+     * Description: Orchestrates processing of post processed (e.g.
+     * clear text) data frame message payloads.
+     *
+     * @param len
+     * @param data
+     * @param trailing_CRLF
      */
     void DeliverBodyClear(int len, const char* data, int trailing_CRLF);
     /**
      * void translateZipBody(int len, const char *data, int method)
-     * 
-     * Description: Handles decompressing of zip & deflate encoded 
-     * data frame message payloads. 
-     * 
-     * @param len 
-     * @param data 
-     * @param method 
+     *
+     * Description: Handles decompressing of zip & deflate encoded
+     * data frame message payloads.
+     *
+     * @param len
+     * @param data
+     * @param method
      */
     void translateZipBody(int len, const char* data, int method);
     /**
      * void translateBrotliBody(int len, const char *data)
-     * 
-     * Description: Handles decompressing of brotli encoded data 
-     * frame message payloads. 
-     * 
-     * @param len 
-     * @param data 
+     *
+     * Description: Handles decompressing of brotli encoded data
+     * frame message payloads.
+     *
+     * @param len
+     * @param data
      */
     void translateBrotliBody(int len, const char* data);
     /**
      * void processData(HTTP2_Data_Frame *frame)
-     * 
-     * Description: Assigns a unique identifier to an incoming data 
-     * frame message and posts events to indicate the beginning and 
-     * end of the data message entity. 
-     * 
-     * @param frame 
+     *
+     * Description: Assigns a unique identifier to an incoming data
+     * frame message and posts events to indicate the beginning and
+     * end of the data message entity.
+     *
+     * @param frame
      */
     void processData(HTTP2_Data_Frame* frame);
 
@@ -202,33 +205,33 @@ public:
     virtual ~HTTP2_OrigStream();
     /**
      * handleFrame(HTTP2_Frame *frame)
-     * 
+     *
      * Description: Perform state processing on a client frame.
      *
-     * 
-     * @param frame 
+     *
+     * @param frame
      */
     void handleFrame(HTTP2_Frame* frame);
     /**
      * void handlePushRequested(frame)
-     * 
+     *
      * Description: A Push Promise frame is only sent by the
      *  server and implies there is no data from the
      *  client. This function allows the client side to process
      *  the server provided client headers and move to a
      *  different state
      *
-     * 
-     * @param void 
+     *
+     * @param void
      */
     void handlePushRequested(HTTP2_Frame* frame);
     /**
      * void handlePeerEndStream(void)
-     * 
-     * Description: Process notification of peer stream ending. 
      *
-     * 
-     * @param void 
+     * Description: Process notification of peer stream ending.
+     *
+     *
+     * @param void
      */
     void handlePeerEndStream(void);
 
@@ -257,30 +260,30 @@ public:
     virtual ~HTTP2_RespStream();
     /**
      * void handleFrame(HTTP2_Frame *frame)
-     * 
+     *
      * Description: Perform state processing on a server frame.
      *
-     * 
-     * @param frame 
+     *
+     * @param frame
      */
     void handleFrame(HTTP2_Frame* frame);
     /**
      * void handlePushRequested(void)
-     * 
+     *
      * Description: Performs processing on a server push promise
      * request.
      *
-     * 
-     * @param void 
+     *
+     * @param void
      */
     void handlePushRequested(HTTP2_Frame* frame);
     /**
      * void handlePeerEndStream(void)
-     * 
+     *
      * Description: Process notification of peer stream ending.
      *
-     * 
-     * @param void 
+     *
+     * @param void
      */
     void handlePeerEndStream(void);
 
@@ -304,15 +307,15 @@ public:
     uint32_t getId(){return this->id;};
     /**
      * bool handleFrame(HTTP2_Frame *f, bool orig)
-     * 
+     *
      * Description: Routes frame to appropriate HTTP2_HalfStream for
      * processing.
      *
-     * 
-     * @param f 
-     * @param orig 
-     * 
-     * @return bool 
+     *
+     * @param f
+     * @param orig
+     *
+     * @return bool
      */
     bool handleFrame(HTTP2_Frame* f, bool orig);
     bool handleStreamEnd();
@@ -329,6 +332,6 @@ private:
     HTTP2_HalfStream* halfStreams[2];
 };
 
-} } // namespace analyzer::* 
+} } // namespace analyzer::*
 
 #endif

@@ -10,7 +10,7 @@ using namespace analyzer::mitrecnd;
 
 /**
  * HTTP2_Stream::UncompressedOutput : public analyzer::OutputHandler
- * 
+ *
  * Description: The output handler type used by the zip decompression api.
  *
  */
@@ -43,10 +43,11 @@ HTTP2_HalfStream::HTTP2_HalfStream(HTTP2_Analyzer* analyzer, uint32_t stream_id,
     this->peerStreamEnded = false;
     this->zip = nullptr;
     this->send_size = true;
-
     this->data_size = 0;
     this->contentLength = 0;
     this->contentEncodingId = DATA_ENCODING_IDENTITY;
+    this->brotli = nullptr;
+    this->brotli_buffer = nullptr;
 }
 
 HTTP2_HalfStream::~HTTP2_HalfStream()
@@ -54,6 +55,14 @@ HTTP2_HalfStream::~HTTP2_HalfStream()
     if (zip) {
         zip->Done();
         delete zip;
+    }
+
+    if (this->brotli != nullptr) {
+        BrotliDecoderDestroyInstance(this->brotli);
+    }
+
+    if (this->brotli_buffer != nullptr) {
+        delete this->brotli_buffer;
     }
 }
 
@@ -146,14 +155,14 @@ void HTTP2_HalfStream::extractDataInfoHeaders(std::string& name, std::string& va
 }
 
 void HTTP2_HalfStream::SubmitData(int len, const char* buf){
-        
+
     // if partial data
     if ((this->send_size && this->contentLength > 0 && len < this->contentLength)
         || !this->send_size) {
         file_mgr->DataIn(reinterpret_cast<const u_char*>(buf), len, this->dataOffset,
                          this->analyzer->GetAnalyzerTag(), this->analyzer->Conn(),
                          this->isOrig, this->precomputed_file_id);
-        
+
         this->dataOffset += len;
     }
     else{
@@ -165,14 +174,14 @@ void HTTP2_HalfStream::SubmitData(int len, const char* buf){
 
 void HTTP2_HalfStream::EndofData(void)
 {
-    // If a unique file identifier has been created then use it, otherwise 
+    // If a unique file identifier has been created then use it, otherwise
     // relay to the file manager all information it needs to uniquely identify
     // the message.
     if (!this->precomputed_file_id.empty()) {
         file_mgr->EndOfFile(this->precomputed_file_id);
     } else {
         file_mgr->EndOfFile(this->analyzer->GetAnalyzerTag(),
-                            this->analyzer->Conn(), 
+                            this->analyzer->Conn(),
                             this->isOrig);
     }
 }
@@ -188,11 +197,15 @@ void HTTP2_HalfStream::DeliverBody(int len, const char* data, int trailing_CRLF)
             break;
         case DATA_ENCODING_BROTLI:
             if (this->dataBlockCnt == 1) { // Begin Entity
-                this->brotli = BrotliDecoderCreateInstance(0, 0, 0); 
+                this->brotli = BrotliDecoderCreateInstance(0, 0, 0);
+                this->brotli_buffer = new uint8_t[BROTLI_BUFFER_SIZE];
             }
             translateBrotliBody(len, data);
             if (trailing_CRLF) { // End Entity
+                delete this->brotli_buffer;
+                this->brotli_buffer = nullptr;
                 BrotliDecoderDestroyInstance(this->brotli);
+                this->brotli = nullptr;
             }
             break;
         case DATA_ENCODING_AES128GCM:   // AES encrypted with 128 bit Key in Galois/Counter Mode
@@ -220,7 +233,7 @@ void HTTP2_HalfStream::translateZipBody(int len, const char* data, int method)
 {
     if (!zip){
         // We don't care about the direction here.
-        zip = new zip::ZIP_Analyzer(this->analyzer->Conn(), false, 
+        zip = new zip::ZIP_Analyzer(this->analyzer->Conn(), false,
                                     (zip::ZIP_Analyzer::Method) method);
         zip->SetOutputHandler(new UncompressedOutput(this));
     }
@@ -230,21 +243,55 @@ void HTTP2_HalfStream::translateZipBody(int len, const char* data, int method)
 void HTTP2_HalfStream::translateBrotliBody(int len, const char* data)
 {
     BrotliDecoderResult result;
-    size_t total_out = 0;
+    bool repeat;
+    size_t bytes_decompressed;
     size_t available_in = len;
     const uint8_t* next_in = (const uint8_t*) data;
-    size_t available_out = MAX_FRAME_SIZE;  
-    uint8_t *next_out = this->brotli_buffer;
 
-    result = BrotliDecoderDecompressStream(this->brotli,
-                                           &available_in,
-                                           &next_in,
-                                           &available_out,
-                                           &next_out,
-                                           &total_out);
-    if (result == BROTLI_DECODER_RESULT_SUCCESS) {
-        DeliverBodyClear((int)available_out, (const char *)this->brotli_buffer, false);
-    }
+    do {
+        repeat = false;
+        size_t available_out = BROTLI_BUFFER_SIZE;
+        uint8_t *next_out = this->brotli_buffer;
+
+        result = BrotliDecoderDecompressStream(
+            this->brotli, &available_in, &next_in,
+            &available_out, &next_out, NULL);
+
+        bytes_decompressed = BROTLI_BUFFER_SIZE - available_out;
+
+        if (result == BROTLI_DECODER_RESULT_SUCCESS
+                && available_in > 0) {
+            this->analyzer->Weird("Unexpected left-over bytes in brotli decompression");
+        }
+
+        switch(result) {
+            case BROTLI_DECODER_RESULT_ERROR:
+            {
+                BrotliDecoderErrorCode code = BrotliDecoderGetErrorCode(this->brotli);
+                const char* error_string = BrotliDecoderErrorString(code);
+                reporter->Error("Brotli decoder error: %s", error_string);
+                break;
+            }
+            case BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT:
+                // Set repeat so this sequence continues until all output data
+                // is extracted
+                repeat = true;
+                // Don't break -- let this fall through to the below case(s)
+            case BROTLI_DECODER_RESULT_SUCCESS:
+            case BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT:
+            {
+                if (bytes_decompressed > 0) {
+                    DeliverBodyClear((int)bytes_decompressed,
+                                    (const char *)this->brotli_buffer, false);
+                }
+                break;
+            }
+            default:
+                // Unexpected/undocumented result
+                reporter->Warning("Brotli decoder returned unexpected result");
+                break;
+        }
+    } while (repeat);
 }
 
 void HTTP2_HalfStream::processData(HTTP2_Data_Frame* data)
@@ -292,10 +339,10 @@ void HTTP2_OrigStream::handleFrame(HTTP2_Frame* frame)
             this->Open_State(frame);
             break;
         case HTTP2_STREAM_STATE_HALF_CLOSED:
-            this->Open_State(frame); 
+            this->Open_State(frame);
             break;
         case HTTP2_STREAM_STATE_CLOSED:
-            this->Closed_State(frame); 
+            this->Closed_State(frame);
             break;
         default:
             break;
@@ -364,7 +411,7 @@ void HTTP2_OrigStream::ProcessHeaderBlock(HTTP2_Header_Frame_Base* header)
         if (name[0] == ':') {
             // Determine if this is one of the Pseudo Headers
             if (name == ":authority") {
-                std::string token = value.substr(value.find("@") + 1, std::string::npos); 
+                std::string token = value.substr(value.find("@") + 1, std::string::npos);
                 this->request_host = token.substr(0, token.find(":"));
                 this->request_authority = value;
             }
@@ -392,9 +439,9 @@ void HTTP2_OrigStream::ProcessHeaderBlock(HTTP2_Header_Frame_Base* header)
                 this->analyzer->HTTP2_Header(this->isOrig, this->id, name, value);
             }
 
-            // Retrieve the header info on a per header basis so that 
-            // persistent header storage is only necessary if http2_all_headers 
-            // is hooked. 
+            // Retrieve the header info on a per header basis so that
+            // persistent header storage is only necessary if http2_all_headers
+            // is hooked.
             extractDataInfoHeaders(name, value);
 
             // Cache off if http2_all_headers is hooked.
@@ -448,12 +495,12 @@ void HTTP2_OrigStream::Idle_State(HTTP2_Frame* frame)
                 if (http2_content_type) {
                     if (this->contentType.empty()) {
                         this->contentType = "text/plain";
-                    } 
+                    }
                     this->analyzer->HTTP2_ContentType(this->isOrig, this->id, this->contentType);
                 }
 
                 // Advanced the state to 'open'
-                this->state = HTTP2_STREAM_STATE_OPEN; 
+                this->state = HTTP2_STREAM_STATE_OPEN;
             } else  { // expect continuation frames
 
             }
@@ -463,7 +510,7 @@ void HTTP2_OrigStream::Idle_State(HTTP2_Frame* frame)
                 // Advance the state and do some book-keeping
                 this->state = HTTP2_STREAM_STATE_HALF_CLOSED;
                 this->handleEndStream();
-            } 
+            }
             break;
         }
         case NGHTTP2_DATA:
@@ -569,10 +616,10 @@ void HTTP2_RespStream::handleFrame(HTTP2_Frame* frame)
             this->Open_State(frame);
             break;
         case HTTP2_STREAM_STATE_HALF_CLOSED:
-            this->Open_State(frame); 
+            this->Open_State(frame);
             break;
         case HTTP2_STREAM_STATE_CLOSED:
-            this->Closed_State(frame); 
+            this->Closed_State(frame);
             break;
         default:
             break;
@@ -647,9 +694,9 @@ void HTTP2_RespStream::ProcessHeaderBlock(HTTP2_Header_Frame_Base* header)
                 this->analyzer->HTTP2_Header(this->isOrig, this->id, name, value);
             }
 
-            // Retrieve the header info on a per header basis so that 
-            // persistent header storage is only necessary if http2_all_headers 
-            // is hooked. 
+            // Retrieve the header info on a per header basis so that
+            // persistent header storage is only necessary if http2_all_headers
+            // is hooked.
             extractDataInfoHeaders(name, value);
 
             // Cache off if http2_all_headers is hooked.
@@ -693,7 +740,7 @@ void HTTP2_RespStream::Idle_State(HTTP2_Frame* frame)
                     this->hlist.flushHeaders();
                 }
 
-                this->state = HTTP2_STREAM_STATE_OPEN; 
+                this->state = HTTP2_STREAM_STATE_OPEN;
             } else { // expect continuation frames
 
             }
@@ -701,7 +748,7 @@ void HTTP2_RespStream::Idle_State(HTTP2_Frame* frame)
             if (header->isEndStream()){
                 this->state = HTTP2_STREAM_STATE_HALF_CLOSED;
                 this->handleEndStream();
-            } 
+            }
             break;
         }
         case NGHTTP2_DATA:
@@ -781,7 +828,7 @@ void HTTP2_RespStream::Closed_State(HTTP2_Frame* frame)
 }
 
 HTTP2_Stream::HTTP2_Stream(HTTP2_Analyzer* analyzer, uint32_t stream_id, nghttp2_hd_inflater* inflaters[2])
-{                                                   
+{
     this->id = stream_id;
     this->inflaters[0] = inflaters[0];
     this->inflaters[1] = inflaters[1];
@@ -826,9 +873,9 @@ bool HTTP2_Stream::handleFrame(HTTP2_Frame* f, bool orig) {
 
     if (f->getType() == NGHTTP2_RST_STREAM){
         // TODO FIXME how to handle a rst stream frame
-        // -- spec specifies rst frame sender must be able to accept frames 
-        // already in transit also priority frames can still be sent after a 
-        // reset can either keep stream allocated to allow for processing of 
+        // -- spec specifies rst frame sender must be able to accept frames
+        // already in transit also priority frames can still be sent after a
+        // reset can either keep stream allocated to allow for processing of
         // frames after reset or ignore further frames
         this->streamReset = true;
         this->streamResetter = orig;
