@@ -20,7 +20,7 @@ export {
 
         ## Unique ID for the stream.
         stream_id:          count  &log &optional;
-        
+
         ## Verb used in the HTTP request (GET, POST, HEAD, etc.).
         method:                  string    &log &optional;
         ## Value of the HOST header.
@@ -94,7 +94,7 @@ redef record connection += {
 };
 
 
-event bro_init() &priority=5
+event zeek_init() &priority=5
 {
     Log::create_stream(HTTP2::LOG, [$columns=Info, $ev=log_http2, $path="http2"]);
     Analyzer::register_for_ports(Analyzer::ANALYZER_HTTP2, ports);
@@ -145,7 +145,7 @@ event http2_stream_start(c: connection, is_orig: bool, stream: count) &priority=
     c$http2_streams$streams[stream]$stream_id = stream;
 }
 
-event http2_request(c: connection, is_orig: bool, stream: count, method: string, 
+event http2_request(c: connection, is_orig: bool, stream: count, method: string,
                     authority: string, host: string, original_URI: string,
                     unescaped_URI: string, version: string, push: bool) &priority=5
 {
