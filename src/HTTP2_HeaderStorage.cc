@@ -64,7 +64,7 @@ TableVal* HTTP2_HeaderList::BuildHeaderTable(void)
 
     for (unsigned int i = 0; i < this->headers.size(); ++i)
     {
-        Val* index = new Val(i+1, TYPE_COUNT);  // index starting from 1
+        Val* index = val_mgr->GetCount(i+1);  // index starting from 1
 
         RecordVal* header_record = BuildHeaderVal(this->headers[i]);
         t->Assign(index, header_record);

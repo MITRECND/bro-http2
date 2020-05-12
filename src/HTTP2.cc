@@ -92,7 +92,7 @@ void HTTP2_Analyzer::EndpointEOF(bool is_orig)
 void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
     tcp::TCP_ApplicationAnalyzer::DeliverStream(len, data, orig);
 
-    // If we see the connection Preface we will have to skip it to realign the 
+    // If we see the connection Preface we will have to skip it to realign the
     // stream for processing
     int prefaceOffset;
 
@@ -193,30 +193,30 @@ static inline RecordVal* generateSettingsRecord(HTTP2_Settings_Frame* frame) {
     RecordVal* settings_rec = new RecordVal(BifType::Record::http2_settings);
 
     if(frame->getHeaderTableSize(val)){
-        settings_rec->Assign(0, new Val(val, TYPE_COUNT));
+        settings_rec->Assign(0, val_mgr->GetCount(val));
     }
     if(frame->getEnablePush(val)){
-        settings_rec->Assign(1, new Val((bool)val, TYPE_BOOL));
+        settings_rec->Assign(1, val_mgr->GetBool(val));
     }
     if(frame->getMaxConcurrentStreams(val)){
-        settings_rec->Assign(2, new Val(val, TYPE_COUNT));
+        settings_rec->Assign(2, val_mgr->GetCount(val));
     }
     if(frame->getInitialWindowSize(val)){
-        settings_rec->Assign(3, new Val(val, TYPE_COUNT));
+        settings_rec->Assign(3, val_mgr->GetCount(val));
     }
     if(frame->getMaxFrameSize(val)){
-        settings_rec->Assign(4, new Val(val, TYPE_COUNT));
+        settings_rec->Assign(4, val_mgr->GetCount(val));
     }
     if(frame->getMaxHeaderListSize(val)){
-        settings_rec->Assign(5, new Val(val, TYPE_COUNT));
+        settings_rec->Assign(5, val_mgr->GetCount(val));
     }
 
     if(frame->unrecognizedSettings()){
         TableVal* unrec_table = new TableVal(BifType::Table::http2_settings_unrecognized_table);
         auto unrec = frame->getUnrecognizedSettings();
         for (auto it=unrec.begin(); it != unrec.end(); it++) {
-            Val* index = new Val(it->first, TYPE_COUNT);
-            unrec_table->Assign(index, new Val(it->second, TYPE_COUNT));
+            Val* index = val_mgr->GetCount(it->first);
+            unrec_table->Assign(index, val_mgr->GetCount(it->second));
             Unref(index);
         }
         settings_rec->Assign(6, unrec_table);
@@ -259,7 +259,7 @@ void HTTP2_Analyzer::handleFrameEvents(HTTP2_Frame* frame, bool orig, uint32_t s
                 if (http2_priority_event) {
                     HTTP2_Priority_Frame* pf = static_cast<HTTP2_Priority_Frame*>(frame);
                     this->HTTP2_Priority_Event(orig, stream_id, pf->getExclusive(),
-                                               pf->getDependentStream(), pf->getWeight()); 
+                                               pf->getDependentStream(), pf->getWeight());
                 }
                 break;
             case NGHTTP2_RST_STREAM:
@@ -446,7 +446,7 @@ void HTTP2_Analyzer::destroyStreams(void)
         auto stream = it->second;
         delete stream;
         this->streams.erase(it);
-    }    
+    }
     this->streams.clear();
 }
 
@@ -494,8 +494,8 @@ void HTTP2_Analyzer::destroyReassemblers(void)
 }
 
 /*
-** Utility 
-*/ 
+** Utility
+*/
 
 bool HTTP2_Analyzer::connectionPrefaceDetected(int len, const u_char* data)
 {
@@ -510,24 +510,24 @@ bool HTTP2_Analyzer::connectionPrefaceDetected(int len, const u_char* data)
 }
 
 /*
-** Bro Interface wrappers. 
+** Bro Interface wrappers.
 */
-void HTTP2_Analyzer::HTTP2_Request(bool orig, unsigned stream, std::string& method, 
-                                   std::string& authority, std::string& host, 
+void HTTP2_Analyzer::HTTP2_Request(bool orig, unsigned stream, std::string& method,
+                                   std::string& authority, std::string& host,
                                    std::string& path, BroString* unescaped, bool push){
     //this->num_requests++;
     if ( http2_request ){
         val_list* vl = new val_list;
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         vl->append(new StringVal(method));
         vl->append(new StringVal(authority));
         vl->append(new StringVal(host));
         vl->append(new StringVal(path));
         vl->append(new StringVal(unescaped));
         vl->append(new StringVal(fmt("%.1f", 2.0)));
-        vl->append(new Val(push, TYPE_BOOL));
+        vl->append(val_mgr->GetBool(push));
         DEBUG_DBG("[%3u][%1d] http2_request\n", stream, orig);
         this->ConnectionEvent(http2_request, vl);
     }
@@ -537,10 +537,10 @@ void HTTP2_Analyzer::HTTP2_Reply(bool orig, unsigned stream, uint16_t status){
     if ( http2_reply ){
         val_list* vl = new val_list;
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         vl->append(new StringVal(fmt("%.1f", 2.0)));
-        vl->append(new Val(status, TYPE_COUNT));
+        vl->append(val_mgr->GetCount(status));
         vl->append(new StringVal("<empty>"));
         DEBUG_DBG("[%3u][%1d] http2_reply\n", stream, orig);
         this->ConnectionEvent(http2_reply, vl);
@@ -551,7 +551,7 @@ void HTTP2_Analyzer::HTTP2_StreamEnd(unsigned stream, RecordVal* stream_stats){
     if ( http2_stream_end ){
         val_list* vl = new val_list;
         vl->append(this->BuildConnVal());
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetCount(stream));
         vl->append(stream_stats);
         DEBUG_DBG("[%3u][%1d] http2_stream_end\n", stream, orig);
         this->ConnectionEvent(http2_stream_end, vl);
@@ -562,8 +562,8 @@ void HTTP2_Analyzer::HTTP2_StreamStart(bool orig, unsigned stream){
     if ( http2_stream_start ){
         val_list* vl = new val_list;
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         DEBUG_DBG("[%3u][%1d] http2_stream_start\n", stream, orig);
         this->ConnectionEvent(http2_stream_start, vl);
     }
@@ -573,8 +573,8 @@ void HTTP2_Analyzer::HTTP2_Header(bool orig, unsigned stream, std::string& name,
     if ( http2_header ){
         val_list* vl = new val_list();
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         vl->append((new StringVal(name))->ToUpper());
         vl->append(new StringVal(value));
         DEBUG_DBG("http2_header\n");
@@ -586,8 +586,8 @@ void HTTP2_Analyzer::HTTP2_AllHeaders(bool orig, unsigned stream, TableVal* hlis
     if ( http2_all_headers ){
         val_list* vl = new val_list();
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         vl->append(hlist);
         DEBUG_DBG("http2_all_headers\n");
         this->ConnectionEvent(http2_all_headers, vl);
@@ -598,8 +598,8 @@ void HTTP2_Analyzer::HTTP2_BeginEntity(bool orig, unsigned stream, std::string& 
     if ( http2_begin_entity ){
         val_list* vl = new val_list();
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         vl->append(new StringVal(contentType));
         DEBUG_DBG("http2_begin_entity\n");
         this->ConnectionEvent(http2_begin_entity, vl);
@@ -610,8 +610,8 @@ void HTTP2_Analyzer::HTTP2_EndEntity(bool orig, unsigned stream){
     if ( http2_end_entity ){
         val_list* vl = new val_list();
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         DEBUG_DBG("http2_end_entity\n");
         this->ConnectionEvent(http2_end_entity, vl);
     }
@@ -621,9 +621,9 @@ void HTTP2_Analyzer::HTTP2_EntityData(bool orig, unsigned stream, int len, const
     if ( http2_entity_data ){
         val_list* vl = new val_list();
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
-        vl->append(new Val(len, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
+        vl->append(val_mgr->GetCount(len));
         vl->append(new StringVal(len, data));
         DEBUG_DBG("http2_entity_data\n");
         this->ConnectionEvent(http2_entity_data, vl);
@@ -634,24 +634,24 @@ void HTTP2_Analyzer::HTTP2_ContentType(bool orig, unsigned stream, std::string& 
     if ( http2_content_type ){
         val_list* vl = new val_list();
         vl->append(this->BuildConnVal());
-        vl->append(new Val(orig, TYPE_BOOL));
-        vl->append(new Val(stream, TYPE_COUNT));
+        vl->append(val_mgr->GetBool(orig));
+        vl->append(val_mgr->GetCount(stream));
         vl->append(new StringVal(contentType));
         DEBUG_DBG("http2_content_type\n");
         this->ConnectionEvent(http2_content_type, vl);
     }
 }
 
-/* 
+/*
 ** Frame Processing Events
 */
 
 void HTTP2_Analyzer::HTTP2_Data_Event(bool orig, unsigned stream, uint32_t len, const char* data){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(len, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetCount(len));
     vl->append(new StringVal(len, data));
     DEBUG_INFO("http2_data_event\n");
     this->ConnectionEvent(http2_data_event, vl);
@@ -660,9 +660,9 @@ void HTTP2_Analyzer::HTTP2_Data_Event(bool orig, unsigned stream, uint32_t len, 
 void HTTP2_Analyzer::HTTP2_Header_Event(bool orig, unsigned stream, uint32_t len, const char* headerData){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(len, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetCount(len));
     vl->append(new StringVal(len, headerData));
     DEBUG_INFO("http2_header_event\n");
     this->ConnectionEvent(http2_header_event, vl);
@@ -671,11 +671,11 @@ void HTTP2_Analyzer::HTTP2_Header_Event(bool orig, unsigned stream, uint32_t len
 void HTTP2_Analyzer::HTTP2_Priority_Event(bool orig, unsigned stream, bool exclusive, unsigned priStream, unsigned weight){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(exclusive, TYPE_BOOL));
-    vl->append(new Val(priStream, TYPE_COUNT));
-    vl->append(new Val(weight, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetBool(exclusive));
+    vl->append(val_mgr->GetCount(priStream));
+    vl->append(val_mgr->GetCount(weight));
     DEBUG_INFO("http2_priority_event\n");
     this->ConnectionEvent(http2_priority_event, vl);
 }
@@ -683,8 +683,8 @@ void HTTP2_Analyzer::HTTP2_Priority_Event(bool orig, unsigned stream, bool exclu
 void HTTP2_Analyzer::HTTP2_RstStream_Event(bool orig, unsigned stream, const std::string& error){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
     vl->append(new StringVal(error));
     DEBUG_INFO("http2_rststream_event\n");
     this->ConnectionEvent(http2_rststream_event, vl);
@@ -693,8 +693,8 @@ void HTTP2_Analyzer::HTTP2_RstStream_Event(bool orig, unsigned stream, const std
 void HTTP2_Analyzer::HTTP2_Settings_Event(bool orig, uint32_t stream, RecordVal* settingsRecord) {
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
     vl->append(settingsRecord);
     DEBUG_INFO("http2_settings_event\n");
     this->ConnectionEvent(http2_settings_event, vl);
@@ -704,10 +704,10 @@ void HTTP2_Analyzer::HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigne
                                              uint32_t len, const char* headerData){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(pushStream, TYPE_COUNT));
-    vl->append(new Val(len, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetCount(pushStream));
+    vl->append(val_mgr->GetCount(len));
     vl->append(new StringVal(len, headerData));
     DEBUG_INFO("http2_pushpromise_event\n");
     this->ConnectionEvent(http2_pushpromise_event, vl);
@@ -716,8 +716,8 @@ void HTTP2_Analyzer::HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigne
 void HTTP2_Analyzer::HTTP2_Ping_Event(bool orig, unsigned stream, uint8_t length, const char* data){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
     vl->append(new StringVal(length, data));
     DEBUG_INFO("http2_ping_event\n");
     this->ConnectionEvent(http2_ping_event, vl);
@@ -727,9 +727,9 @@ void HTTP2_Analyzer::HTTP2_GoAway_Event(bool orig, unsigned stream, unsigned las
                                         const std::string& error, uint32_t length, const char* data){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(lastStream, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetCount(lastStream));
     vl->append(new StringVal(error));
     DEBUG_INFO("http2_goaway_event\n");
     this->ConnectionEvent(http2_goaway_event, vl);
@@ -738,9 +738,9 @@ void HTTP2_Analyzer::HTTP2_GoAway_Event(bool orig, unsigned stream, unsigned las
 void HTTP2_Analyzer::HTTP2_WindowUpdate_Event(bool orig, unsigned stream, unsigned increment){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(increment, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetCount(increment));
     DEBUG_INFO("http2_windowupdate_event\n");
     this->ConnectionEvent(http2_windowupdate_event, vl);
 }
@@ -748,9 +748,9 @@ void HTTP2_Analyzer::HTTP2_WindowUpdate_Event(bool orig, unsigned stream, unsign
 void HTTP2_Analyzer::HTTP2_Continuation_Event(bool orig, unsigned stream, uint32_t len, const char* headerData){
     val_list* vl = new val_list();
     vl->append(this->BuildConnVal());
-    vl->append(new Val(orig, TYPE_BOOL));
-    vl->append(new Val(stream, TYPE_COUNT));
-    vl->append(new Val(len, TYPE_COUNT));
+    vl->append(val_mgr->GetBool(orig));
+    vl->append(val_mgr->GetCount(stream));
+    vl->append(val_mgr->GetCount(len));
     vl->append(new StringVal(len, headerData));
     DEBUG_INFO("http2_continuation_event\n");
     this->ConnectionEvent(http2_continuation_event, vl);
