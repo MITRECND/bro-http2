@@ -2,3 +2,4 @@
 build/
 plugins/build
 tests/.*
+.vscode/
