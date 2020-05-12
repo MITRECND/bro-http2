@@ -300,7 +300,7 @@ void HTTP2_HalfStream::processData(HTTP2_Data_Frame* data)
         // Generate a unique file id for the file being transferred
         if(this->precomputed_file_id.empty()){
             char tmp[16];
-            uint64 uid = calculate_unique_id(UID_POOL_DEFAULT_SCRIPT);
+            uint64_t uid = calculate_unique_id(UID_POOL_DEFAULT_SCRIPT);
             this->precomputed_file_id = uitoa_n(uid, tmp, sizeof(tmp), 62, "F");
         }
         if ( http2_begin_entity )
