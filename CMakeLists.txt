@@ -1,15 +1,14 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(BroPluginHTTP2)
+project(ZeekPluginHTTP2)
 
-
-if ( NOT BRO_DIST )
-    message(FATAL_ERROR "BRO_DIST not set")
+if ( NOT ZEEK_DIST )
+    message(FATAL ERROR "ZEEK_DIST not set")
 endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-include(BroPlugin)
+include(ZeekPlugin)
 
 find_package(LibNGHTTP2)
 find_package(LibBROTLI)
@@ -46,21 +45,21 @@ message(STATUS "LibNGHTTP2 INC DIR  : ${LibNGHTTP2_INCLUDE_DIR}")
 message(STATUS "LibNGHTTP2 LIB DIR  : ${LibNGHTTP2_LIBRARIES}")
 
 include_directories(BEFORE ${LibNGHTTP2_INCLUDE_DIR})
-bro_plugin_begin(mitrecnd HTTP2)
+zeek_plugin_begin(mitrecnd HTTP2)
 
 include_directories(BEFORE ${LibBROTLI_INCLUDE_DIR})
-bro_plugin_link_library(${LibBROTLI_LIBRARIES})
+zeek_plugin_link_library(${LibBROTLI_LIBRARIES})
 
-bro_plugin_cc(src/Plugin.cc)
-bro_plugin_cc(src/HTTP2_Frame.cc)
-bro_plugin_cc(src/HTTP2_FrameReassembler.cc)
-bro_plugin_cc(src/HTTP2_HeaderStorage.cc)
-bro_plugin_cc(src/HTTP2_Stream.cc)
-bro_plugin_cc(src/HTTP2.cc)
-bro_plugin_bif(src/events.bif src/http2.bif)
-bro_plugin_dist_files(COPYING LICENSE README README.md VERSION)
-bro_plugin_link_library(${LibNGHTTP2_LIBRARIES})
-bro_plugin_end()
+zeek_plugin_cc(src/Plugin.cc)
+zeek_plugin_cc(src/HTTP2_Frame.cc)
+zeek_plugin_cc(src/HTTP2_FrameReassembler.cc)
+zeek_plugin_cc(src/HTTP2_HeaderStorage.cc)
+zeek_plugin_cc(src/HTTP2_Stream.cc)
+zeek_plugin_cc(src/HTTP2.cc)
+zeek_plugin_bif(src/events.bif src/http2.bif)
+zeek_plugin_dist_files(COPYING LICENSE README README.md VERSION)
+zeek_plugin_link_library(${LibNGHTTP2_LIBRARIES})
+zeek_plugin_end()
 
 file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" VERSION LIMIT_COUNT 1)
 
