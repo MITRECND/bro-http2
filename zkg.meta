@@ -1,5 +1,5 @@
 [package]
-description = A HTTP2 protocol analyzer for the Bro IDS.
+description = A HTTP2 protocol analyzer for the Zeek NSM.
 tags = zeek plugin, protocol analyzer, http2, intel
 script_dir = scripts
 depends =

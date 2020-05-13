@@ -75,7 +75,11 @@ this plugin in multiple ways:
 
 * Using the official source:
 
-      # zkg install bro/mitrecnd/bro-http2
+      # zkg install zeek/mitrecnd/bro-http2
+
+__NOTE__ If you had an older version of zkg or the original bro package manager
+installed, the path might show up as `bro/mitrecnd/bro-http2`. Please use that
+path or update your zkg configuration located, by default, in `~/.zkg/config`.
 
 #### Installing Older Versions
 
@@ -83,7 +87,7 @@ If you are still running an older version of Zeek (Bro 2.6.x and older), you
 can install a previous version of the plugin using zkg, utilizing the `--version`
 argument.
 
-      # zkg install bro/mitrecnd/bro-http2 --version 0.4.2
+      # zkg install zeek/mitrecnd/bro-http2 --version 0.4.2
 
 ## Usage
 
