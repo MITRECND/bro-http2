@@ -1,12 +1,9 @@
-# Bro HTTP2 Analyzer Plugin
-
-__NOTE!!__ If you are currently running versions 0.1 or 0.2, you will need to
-delete the old plugin since the namespace of the plugin has changed (from
-"http2::HTTP2" to "mitrecnd::HTTP2"). Instructions on how to do so are
-outlined below.
+# Zeek HTTP2 Analyzer Plugin
 
 This plugin provides an HTTP2 ([RFC 7540](https://tools.ietf.org/html/rfc7540))
-decoder/analyzer for [Bro](https://www.bro.org/).
+decoder/analyzer for [Zeek](https://www.zeek.org/) 3.0.x and 3.1.x. If you need
+this capability for older instances of Zeek (Bro), i.e., 2.6.x or older, please
+refer to the last `0.4.x` release of this plugin.
 
 The events exposed attempt to mimic the events exposed by the native HTTP analyzer
 
@@ -40,8 +37,8 @@ Brotli is required as it is used quite often by popular websites and the
 analyzer automatically attempts to decompress data frames. No pre-compiled
 packages could be found for the brotli library so it will need to be manually
 built and installed. The library can be found at
-https://github.com/google/brotli. The latest release can be found at
-https://github.com/google/brotli/releases/latest. After downloading the latest
+<https://github.com/google/brotli>. The latest release can be found at
+<https://github.com/google/brotli/releases/latest>. After downloading the latest
 release, follow these steps to compile and install the library:
 
     tar -zxvf <release file>
@@ -58,46 +55,46 @@ To manually build and install the plugin:
 
     cd <HTTP2 Plugin Directory>
     rm -r build # Only if build exists
-    ./configure --bro-dist=</path/to/bro/source>
+    ./configure --zeek-dist=</path/to/zeek/source>
     make
     make test
     make install
 
+### Zeek Package Manager
 
-__NOTE!!__ If you are upgrading the plugin from versions 0.1 or 0.2 please
-delete the following directory from your bro install before starting or
-restarting your cluster:
-
-    <bro_install_root>/lib/bro/plugins/http2_HTTP2
-
-
-### Bro Package Manager
-
-The Bro Package Manager can be used to install
+The Zeek Package Manager can be used to install
 this plugin in multiple ways:
 
 * From the repo clone directory:
-```
-    # bro-pkg install .
-```
+
+      # zkg install .
 
 * Using the github repo directly:
-```
-    # bro-pkg install https://github.com/MITRECND/bro-http2
-```
+
+      # zkg install https://github.com/MITRECND/bro-http2
 
 * Using the official source:
-```
-    # bro-pkg install bro/mitrecnd/bro-http2
-```
+
+      # zkg install zeek/mitrecnd/bro-http2
+
+__NOTE__ If you had an older version of zkg or the original bro package manager
+installed, the path might show up as `bro/mitrecnd/bro-http2`. Please use that
+path or update your zkg configuration located, by default, in `~/.zkg/config`.
+
+#### Installing Older Versions
+
+If you are still running an older version of Zeek (Bro 2.6.x and older), you
+can install a previous version of the plugin using zkg, utilizing the `--version`
+argument.
+
+      # zkg install zeek/mitrecnd/bro-http2 --version 0.4.2
 
 ## Usage
 
-You should see the following output from bro if successfully installed:
+You should see the following output from zeek if successfully installed:
 
-```
-    > bro -NN mitrecnd::HTTP2
-    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.4)
+    > zeek -NN mitrecnd::HTTP2
+    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.5.0)
         [Analyzer] HTTP2 (ANALYZER_HTTP2, enabled)
         [Event] http2_request
         [Event] http2_reply
@@ -123,11 +120,9 @@ You should see the following output from bro if successfully installed:
         [Type] http2_settings_unrecognized_table
         [Type] http2_settings
         [Type] http2_stream_stat
-```
-
 
 To use/load the http2 analyzer, add the following to your config
-(e.g., local.bro):
+(e.g., local.zeek):
 
     @load http2
 

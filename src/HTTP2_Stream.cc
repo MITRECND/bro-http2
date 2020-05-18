@@ -300,7 +300,7 @@ void HTTP2_HalfStream::processData(HTTP2_Data_Frame* data)
         // Generate a unique file id for the file being transferred
         if(this->precomputed_file_id.empty()){
             char tmp[16];
-            uint64 uid = calculate_unique_id(UID_POOL_DEFAULT_SCRIPT);
+            uint64_t uid = calculate_unique_id(UID_POOL_DEFAULT_SCRIPT);
             this->precomputed_file_id = uitoa_n(uid, tmp, sizeof(tmp), 62, "F");
         }
         if ( http2_begin_entity )
@@ -893,12 +893,18 @@ bool HTTP2_Stream::handleStreamEnd() {
     if (http2_stream_end) {
         RecordVal* stream_stats = new RecordVal(BifType::Record::http2_stream_stat);
         // process is_orig == true first
-        stream_stats->Assign(0, new Val(static_cast<uint64_t>\
-                                        (this->halfStreams[1]->getDataSize()),
-                             TYPE_COUNT));
-        stream_stats->Assign(1, new Val(static_cast<uint64_t>\
-                                        (this->halfStreams[0]->getDataSize()),
-                             TYPE_COUNT));
+        stream_stats->Assign(
+            0, val_mgr->GetCount(
+                static_cast<uint64_t>(this->halfStreams[1]->getDataSize())
+            )
+        );
+
+        stream_stats->Assign(
+            1, val_mgr->GetCount(
+                static_cast<uint64_t>(this->halfStreams[0]->getDataSize())
+            )
+        );
+
         this->analyzer->HTTP2_StreamEnd(this->id, stream_stats);
     }
 

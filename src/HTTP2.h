@@ -37,14 +37,14 @@ public:
 
     // Overriden from Analyzer.
     virtual void Done();
-    
+
     /**
      * void HTTP2_Analyzer::DeliverStream(int len, const u_char *data, bool orig)
-     * 
-     * Description: Point of injection for the TCP stream. This does
-     * not include the TCP header only the payload. 
      *
-     * 
+     * Description: Point of injection for the TCP stream. This does
+     * not include the TCP header only the payload.
+     *
+     *
      * @param len   The length of the incoming data stream
      * @param data  A reference to the stream data
      * @param orig  Flag indicating whether the stream came from the
@@ -52,25 +52,25 @@ public:
      */
     virtual void DeliverStream(int len, const u_char* data, bool orig);
     /**
-     * void HTTP2_Analyzer::Undelivered(uint64 seq, int len, bool orig)
-     * 
-     * Description: 
+     * void HTTP2_Analyzer::Undelivered(uint64_t seq, int len, bool orig)
      *
-     * 
-     * @param seq 
-     * @param len 
+     * Description:
+     *
+     *
+     * @param seq
+     * @param len
      * @param orig  Flag indicating whether the stream came from the
      *              originator or receiver.
      */
-    virtual void Undelivered(uint64 seq, int len, bool orig);
+    virtual void Undelivered(uint64_t seq, int len, bool orig);
 
     // Overriden from tcp::TCP_ApplicationAnalyzer.
     /**
      * void HTTP2_Analyzer::EndpointEOF(bool is_orig)
-     * 
+     *
      * Description:
      *
-     * 
+     *
      * @param is_orig   Flag indicating whether the stream came from
      *                  the originator or receiver.
      */
@@ -88,11 +88,11 @@ public:
      * stream, std::string method, std::string authority,
      * std::string  host, std::string path,  Val*  unescaped,
      * bool push=false)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Request event
      * has occurred.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -103,17 +103,17 @@ public:
      * @param unescaped description of the request unescaped path
      * @param push      Whether this is a push promise transaction or not
      */
-    void HTTP2_Request(bool orig, unsigned stream, std::string& method, 
-                       std::string& authority, std::string&  host, 
+    void HTTP2_Request(bool orig, unsigned stream, std::string& method,
+                       std::string& authority, std::string&  host,
                        std::string& path,  BroString*  unescaped,
                        bool push=false);
     /**
      * void HTTP2_Analyzer::HTTP2_Reply(bool orig, unsigned stream, Val *status)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Reply event
      * has occurred.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -122,11 +122,11 @@ public:
     void HTTP2_Reply(bool orig, unsigned stream, uint16_t status);
     /**
      * void HTTP2_Analyzer::HTTP2_StreamStart(bool orig, unsigned stream)
-     * 
+     *
 	 * Description: Notification to Bro that an HTTP2 Stream has
 	 * been created.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -134,11 +134,11 @@ public:
     void HTTP2_StreamStart(bool orig, unsigned stream);
     /**
      * void HTTP2_Analyzer::HTTP2_StreamEnd(bool orig, unsigned stream)
-     * 
+     *
 	 * Description: Notification to Bro that an HTTP2 Stream has
 	 * ended.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -148,7 +148,7 @@ public:
      * Description: Notification to Bro that an HTTP2 Header event
      * has occurred.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -159,11 +159,11 @@ public:
     void HTTP2_Header(bool orig, unsigned stream, std::string& name, std::string& value);
     /**
      * void HTTP2_Analyzer::HTTP2_AllHeaders(bool orig, unsigned stream, HTTP2_HeaderList *hlist)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 All Headers event
      * has occurred.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -173,11 +173,11 @@ public:
     /**
      * void HTTP2_Analyzer::HTTP2_BeginEntity(bool orig, unsigned
      * stream, std::string contentType)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Message Entity
      * has been created.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -187,11 +187,11 @@ public:
     void HTTP2_BeginEntity(bool orig, unsigned stream, std::string& contentType);
     /**
      * void HTTP2_Analyzer::HTTP2_EndEntity(bool orig, unsigned stream)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Message Entity
      * has completed processing.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -199,11 +199,11 @@ public:
     void HTTP2_EndEntity(bool orig, unsigned stream);
     /**
      * void HTTP2_Analyzer::HTTP2_EntityData(bool orig, unsigned stream, int len, const char *data)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Message Entity
      * block has been processed.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -214,11 +214,11 @@ public:
     /**
      * void HTTP2_Analyzer::HTTP2_ContentType(bool orig, unsigned
      * stream, std::string contentType)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Message Entity
      * content type has been updated.
      *
-     * 
+     *
      * @param orig          Flag indicating whether the stream came from the
      *                      originator or receiver.
      * @param stream        unique identifier for the stream.
@@ -231,45 +231,45 @@ public:
      *                                       unsigned stream,
      *                                       std::string
      *                                       encodingType)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Message Entity
      * data event has occured. (i.e. a block of entity message body
      * data has been posted to the file manager)
      *
-     * 
+     *
      * @param orig          Flag indicating whether the stream came
      *                      from the originator or receiver.
-     * @param stream        unique identifier for the stream. 
+     * @param stream        unique identifier for the stream.
      * @param encodingType  The encoding type of the data message.
      */
     void HTTP2_Data_Event(bool orig, unsigned stream, uint32_t len, const char* data);
     /**
 	 * void HTTP2_Analyzer::HTTP2_Header_Event(bool orig, unsigned
 	 * stream, uint32_t len, const char *headerData)
-     * 
+     *
 	 * Description: Notification to Bro that an HTTP2 Header frame
 	 * has been received.
      *
      * @param orig          Flag indicating whether the stream came
      *                      from the originator or receiver.
-     * @param stream        unique identifier for the stream. 
+     * @param stream        unique identifier for the stream.
      * @param len           length of the frame header.
      * @param headerData    contents of the frame header.
      */
     void HTTP2_Header_Event(bool orig, unsigned stream, uint32_t len, const char* headerData);
     /**
      * void HTTP2_Analyzer::HTTP2_Priority_Event(bool orig, unsigned stream, bool exclusive, unsigned priStream, unsigned weight)
-     * 
-     * Description: Notification to Bro that an HTTP2 Priority frame 
-     * has been received. 
-     * 
+     *
+     * Description: Notification to Bro that an HTTP2 Priority frame
+     * has been received.
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
-	 * @param exclusive indication of whether or not the priority is 
+	 * @param exclusive indication of whether or not the priority is
 	 *  				exclusive.
 	 * @param priStream the stream id associated with the stream
-	 *					that the receiving stream depends on. 
+	 *					that the receiving stream depends on.
 	 * @param weight    used to determine the relative proportion of
 	 *  				available resources that are assigned to
 	 *  				streams dependent on the same stream.
@@ -277,11 +277,11 @@ public:
     void HTTP2_Priority_Event(bool orig, unsigned stream, bool exclusive, unsigned priStream, unsigned weight);
     /**
      * void HTTP2_Analyzer::HTTP2_RstStream_Event(bool orig, unsigned stream, const char *error)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Reset Stream
      * frame has been received.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -290,11 +290,11 @@ public:
     void HTTP2_RstStream_Event(bool orig, unsigned stream, const std::string& error);
     /**
      * void HTTP2_Analyzer::HTTP2_Settings_Event(bool orig, unsigned stream, RecordVal* settingsRecord)
-     * 
-     * Description: Notification to Bro that an HTTP2 Settings frame
-     * has been received. 
      *
-     * 
+     * Description: Notification to Bro that an HTTP2 Settings frame
+     * has been received.
+     *
+     *
 	 * @param orig            Flag indicating whether the stream
 	 *  				      came from the originator or receiver.
      * @param stream          unique identifier for the stream.
@@ -303,11 +303,11 @@ public:
     void HTTP2_Settings_Event(bool orig, uint32_t stream, RecordVal* settingsRecord);
     /**
      * void HTTP2_Analyzer::HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigned pushStream)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Push Promise
      * frame has been received.
      *
-     * 
+     *
 	 * @param orig        Flag indicating whether the stream came
 	 *  				  from the originator or receiver.
 	 * @param stream      unique identifier for the stream, for
@@ -320,11 +320,11 @@ public:
     void HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigned pushStream, uint32_t len, const char* headerData);
     /**
      * void HTTP2_Analyzer::HTTP2_Ping_Event(bool orig, unsigned stream, const char *data)
-     * 
-     * Description: Notification to Bro that an HTTP2 Ping frame 
-     * has been received. 
      *
-     * 
+     * Description: Notification to Bro that an HTTP2 Ping frame
+     * has been received.
+     *
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -334,29 +334,29 @@ public:
     void HTTP2_Ping_Event(bool orig, unsigned stream, uint8_t length, const char* data);
     /**
      * void HTTP2_Analyzer::HTTP2_GoAway_Event(bool orig, unsigned stream, unsigned lastStream, const char *error)
-     * 
-     * Description: Notification to Bro that an HTTP2 Go Away frame 
-     * has been received. 
      *
-     * 
+     * Description: Notification to Bro that an HTTP2 Go Away frame
+     * has been received.
+     *
+     *
 	 * @param orig        Flag indicating whether the stream came
 	 *  				  from the originator or receiver.
      * @param stream      unique identifier for the stream.
 	 * @param lastStream  unique identifier for the last valid
 	 *  				  stream.
-	 * @param error       reason for the goaway event. 
+	 * @param error       reason for the goaway event.
 	 * @param length      length of debug data.
-	 * @param data        debug data. 
-	 *  
+	 * @param data        debug data.
+	 *
      */
     void HTTP2_GoAway_Event(bool orig, unsigned stream, unsigned lastStream, const std::string& error, uint32_t length, const char* data);
     /**
      * void HTTP2_Analyzer::HTTP2_WindowUpdate_Event(bool orig, unsigned stream, unsigned increment)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Window Update
      * frame has been received.
      *
-     * 
+     *
      * @param orig      Flag indicating whether the stream came from the
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
@@ -365,14 +365,14 @@ public:
     void HTTP2_WindowUpdate_Event(bool orig, unsigned stream, unsigned increment);
     /**
      * void HTTP2_Analyzer::HTTP2_Continuation_Event(bool orig, unsigned stream)
-     * 
+     *
      * Description: Notification to Bro that an HTTP2 Continuation
      * frame has been received.
      *
-     * 
+     *
 	 * @param orig        Flag indicating whether the stream came
 	 *  				  from the originator or receiver.
-	 * @param stream      unique identifier for the stream. 
+	 * @param stream      unique identifier for the stream.
      * @param len         length of the frame header.
      * @param headerData  contents of the frame header.
      */
@@ -380,12 +380,12 @@ public:
     /**
      * void HTTP2_Analyzer::HTTP2_Event(std::string& category,
      * std::string& detail)
-     * 
+     *
      * Description: Indication that an HTTP2 event has occured.
      *
-     * 
+     *
      * @param category  description of the category of event
-     * @param detail    event details 
+     * @param detail    event details
      */
     void HTTP2_Event(std::string& category, std::string& detail);
 
@@ -406,7 +406,7 @@ private:
     void destroyStreams();
     HTTP2_Stream* getStream(uint32_t stream_id, bool orig);
     void removeStream(HTTP2_Stream* s);
-    void flushStreams(uint32_t id); 
+    void flushStreams(uint32_t id);
 
 	// Packet fragmentation management.
     void initReassemblers(void);
@@ -416,7 +416,7 @@ private:
 
     /**
      * bool connectionPrefaceDetected(int len, const u_char *data)
-     * 
+     *
      * Description: Indication of whether or not the HTTP2
      * connection preface has been detected within the supplied data
      * stream.
@@ -424,14 +424,14 @@ private:
      *
      * @param len  length of data array
      * @param data reference to data stream.
-     * 
+     *
      * @return bool indication of detection.
      */
     bool connectionPrefaceDetected(int len, const u_char* data);
 
     /**
      * void analyzer/http2/HTTP2_Analyzer::handleFrameEvents(HTTP2_Frame *frame, bool orig, uint32_t stream_id)
-     * 
+     *
 	 * Description: Manages Posting of Bro events associated with
 	 * incoming frames on non-stream0 streams.
      *
@@ -439,7 +439,7 @@ private:
 	 *  			  associated.
 	 * @param orig    Flag indicating whether the stream came from
 	 *  			  the originator or receiver.
-	 * @param stream  unique identifier for the stream. 
+	 * @param stream  unique identifier for the stream.
      */
     void handleFrameEvents(HTTP2_Frame* frame, bool orig, uint32_t stream_id);
 
@@ -460,11 +460,11 @@ private:
     uint32_t lastStreams[2];
     uint32_t goAwayStream;
 
-    HTTP2_FrameReassembler* reassemblers; 
+    HTTP2_FrameReassembler* reassemblers;
     nghttp2_hd_inflater* inflaters[2];
     std::unordered_map<uint32_t, HTTP2_Stream*> streams;
 };
 
-} } // namespace analyzer::* 
+} } // namespace analyzer::*
 
 #endif
