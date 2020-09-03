@@ -94,7 +94,7 @@ argument.
 You should see the following output from zeek if successfully installed:
 
     > zeek -NN mitrecnd::HTTP2
-    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.5.0)
+    mitrecnd::HTTP2 - Hypertext Transfer Protocol Version 2 analyzer (dynamic, version 0.5.1)
         [Analyzer] HTTP2 (ANALYZER_HTTP2, enabled)
         [Event] http2_request
         [Event] http2_reply

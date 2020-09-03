@@ -10,8 +10,6 @@
 #include "nghttp2.h"
 #include "nghttp2ver.h"
 
-using namespace std;
-
 namespace analyzer { namespace mitrecnd {
 
 struct HTTP2_HeaderStorage {
@@ -30,55 +28,55 @@ public:
     /**
      * void HTTP2_HeaderList::addHeader(std::string& name,
      * std::string& value)
-     * 
+     *
      * Description: Create and add a HTTP2_HeaderStorage object to
      * the List.
      *
-     * 
-     * @param name 
-     * @param value 
+     *
+     * @param name
+     * @param value
      */
     void addHeader(std::string& name, std::string& value);
 
     /**
      * void HTTP2_HeaderList::addHeader(HTTP2_HeaderStorage *header)
-     * 
+     *
      * Description: Add an existing HTTP2_HeaderStorage object to
      * the List.
      *
-     * 
-     * @param header 
+     *
+     * @param header
      */
     void addHeader(HTTP2_HeaderStorage& header);
     void addHeader(HTTP2_HeaderStorage&& header);
     /**
      * void HTTP2_HeaderList::flushHeaders()
-     * 
+     *
      * Description: Remove all the HTTP2_HeaderStorage objects from
      * the list and delete their instances.
      *
-     * 
+     *
      */
     void flushHeaders();
 
     /**
      * RecordVal*
      *  HTTP2_HeaderList::BuildHeaderVal(HTTP2_HeaderStorage h)
-     * 
+     *
      * Description: Create a header record entry for use when
      * building a header table to be consumed by bro.
      *
-     * 
+     *
      * @param h             reference to the header storage
      *                      structure to use when building the
      *                      header record entry.
-     * 
+     *
      * @return RecordVal*   reference to resulting header record.
      */
     RecordVal* BuildHeaderVal(HTTP2_HeaderStorage& h);
     /**
      * TableVal* HTTP2_HeaderList::BuildHeaderTable(void)
-     * 
+     *
      * Description: Create a header table to be consumed by bro.
      *
      * @return TableVal*    reference to the resulting header table
@@ -88,7 +86,7 @@ public:
     std::vector<HTTP2_HeaderStorage> headers;
 };
 
-} } // namespace analyzer::* 
+} } // namespace analyzer::*
 
 #endif
 

@@ -140,9 +140,9 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
     }
     // If the connection is HTTP2
     if (this->connectionActive) {
-        vector<HTTP2_Frame*> frames = this->reassemblers[orig].process(&data[prefaceOffset], (len - prefaceOffset));
+        std::vector<HTTP2_Frame*> frames = this->reassemblers[orig].process(&data[prefaceOffset], (len - prefaceOffset));
         // Frame memory is callee handled so clean it up after use
-        for (vector<HTTP2_Frame*>::iterator it = frames.begin(); it != frames.end(); ++it){
+        for (std::vector<HTTP2_Frame*>::iterator it = frames.begin(); it != frames.end(); ++it){
             if(*it == nullptr) {
                 // Reassembler will ensure last frame pointer is null, so no other, valid,
                 // frames should be present that need to be to be handled/deleted
