@@ -137,7 +137,7 @@ private:
 
 };
 
-class HTTP2_Settings_Frame : public HTTP2_Frame {    
+class HTTP2_Settings_Frame : public HTTP2_Frame {
 public:
     HTTP2_Settings_Frame(HTTP2_FrameHeader* h, uint8_t* payload, uint32_t len);
     ~HTTP2_Settings_Frame(void);
@@ -149,7 +149,7 @@ public:
     bool getMaxFrameSize(uint32_t& size);
     bool getMaxHeaderListSize(uint32_t& size);
     bool unrecognizedSettings(void){return this->unrecognized_settings;};
-    const std::vector<pair<uint16_t, uint32_t>>& getUnrecognizedSettings(void){return (this->unrec_settings);};
+    const std::vector<std::pair<uint16_t, uint32_t>>& getUnrecognizedSettings(void){return (this->unrec_settings);};
     bool isAck(void){return this->header->isAck();};
 
 private:
@@ -167,10 +167,10 @@ private:
     uint32_t initial_window_size;
     uint32_t max_frame_size;
     uint32_t max_header_list_size;
-    std::vector<pair<uint16_t, uint32_t>> unrec_settings;
+    std::vector<std::pair<uint16_t, uint32_t>> unrec_settings;
 
-};                                                 
-                                             
+};
+
 class HTTP2_PushPromise_Frame : public HTTP2_Header_Frame_Base {
 public:
     HTTP2_PushPromise_Frame(HTTP2_FrameHeader* h, uint8_t* payload, uint32_t len);
@@ -233,6 +233,6 @@ private:
 };
 
 
-} } // namespace analyzer::* 
+} } // namespace analyzer::*
 
 #endif

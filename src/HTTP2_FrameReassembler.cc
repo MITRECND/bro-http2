@@ -7,6 +7,7 @@
 #include "Reporter.h"
 
 using namespace analyzer::mitrecnd;
+using namespace std;
 
 HTTP2_FrameReassembler::HTTP2_FrameReassembler()
 {
@@ -117,15 +118,15 @@ vector<HTTP2_Frame*> HTTP2_FrameReassembler::process(const uint8_t* data, uint32
                 break;
             } else {
                 uint32_t oldBufferLen = this->bufferLen;
-                
+
                 // Selectively copy data to minimize bytes copied
                 if ((this->copyLen == 0) || (this->copyLen >= dataLen)){
-                    // If we don't know how much to copy yet or the amount we 
+                    // If we don't know how much to copy yet or the amount we
                     // need is more than supplied then just copy what is available.
                     this->appendBuffer(cursor, dataLen);
                 }
                 else{
-                    // Only copy what is needed to complete the frame. The excess 
+                    // Only copy what is needed to complete the frame. The excess
                     // just gets flushed, so why waste the copies.
                     this->appendBuffer(cursor, copyLen);
                 }
@@ -148,7 +149,7 @@ vector<HTTP2_Frame*> HTTP2_FrameReassembler::process(const uint8_t* data, uint32
                         // Determine if any data left in buffer
                         uint32_t diff = frame_length - oldBufferLen;
                         // oldBufferLen should always be smaller than the frame length
-                        // double-check! 
+                        // double-check!
                         if (frame_length <= oldBufferLen ) {
                             DEBUG_ERR("Fragmented Frame Processing Error! frame_length:%d Old Buffer Length:%d\n", frame_length, oldBufferLen);
                             processed_frames.push_back(nullptr);

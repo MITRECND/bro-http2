@@ -11,7 +11,6 @@
 #include "HTTP2_Frame.h"
 #include "HTTP2.h"
 
-using namespace std;
 
 namespace analyzer { namespace mitrecnd {
 
@@ -90,7 +89,7 @@ protected:
      *                               header was found and
      *                               decompressed.
      */
-    bool processHeaders(uint8_t** headerBlockFragmentPtr, uint32_t& len, bool endHeaders, string& name, string& value);
+    bool processHeaders(uint8_t** headerBlockFragmentPtr, uint32_t& len, bool endHeaders, std::string& name, std::string& value);
 
     // Data Management
     int dataOffset;

@@ -22,7 +22,6 @@
 #include "nghttp2.h"
 #include "nghttp2ver.h"
 
-using namespace std;
 
 namespace analyzer { namespace mitrecnd {
 
