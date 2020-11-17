@@ -440,7 +440,7 @@ bool HTTP2_Settings_Frame::getMaxFrameSize(uint32_t& size)
         size = this->max_frame_size;
     }
 
-    return this->max_frame_size;
+    return this->max_frame_size_set;
 }
 
 bool HTTP2_Settings_Frame::getMaxHeaderListSize(uint32_t& size)
@@ -449,7 +449,7 @@ bool HTTP2_Settings_Frame::getMaxHeaderListSize(uint32_t& size)
         size = this->max_header_list_size;
     }
 
-    return this->max_header_list_size;
+    return this->max_header_list_size_set;
 }
 
 
