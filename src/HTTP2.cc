@@ -123,6 +123,15 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
     prefaceOffset = 0;
     // Evaluate incoming data to determine if it is HTTP2 protocol or not
     if (!this->connectionActive) {
+        if ( ! orig ) {
+            // The first server-side message MUST be a SETTINGS. However, we can't handle that
+            // while we have not yet set up data structures, so we buffer it.
+            if ( serverPreface.empty() ) {
+                serverPreface = std::string(reinterpret_cast<const char*>(data), len);
+                return;
+            }
+        }
+
         this->connectionActive = connectionPrefaceDetected(len, data);
         if(this->connectionActive){
             // Skip the preface and process what comes after it.
@@ -180,6 +189,12 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
             }
             delete (frame);
         }
+
+        if ( serverPreface.size() ) {
+            auto preface = serverPreface;
+            serverPreface.clear();
+            HTTP2_Analyzer::DeliverStream(preface.size(), reinterpret_cast<const u_char*>(preface.data()), false);
+            }
     }
 }
 

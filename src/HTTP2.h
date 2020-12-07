@@ -458,6 +458,7 @@ private:
     int64_t maxHeaderListSize;
     uint32_t lastStreams[2];
     uint32_t goAwayStream;
+    std::string serverPreface;
 
     HTTP2_FrameReassembler* reassemblers;
     nghttp2_hd_inflater* inflaters[2];
