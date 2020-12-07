@@ -15,6 +15,6 @@ plugin::Configuration Plugin::Configure()
     config.name = "mitrecnd::HTTP2";
     config.version.major = 0;
     config.version.minor = 5;
-    config.version.patch = 2;
+    config.version.patch = 3;
     return config;
     }
