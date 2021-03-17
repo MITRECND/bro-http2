@@ -157,7 +157,7 @@ event http2_request(c: connection, is_orig: bool, stream: count, method: string,
     c$http2_streams$streams[stream]$push = push;
 
     if ( method !in HTTP::http_methods )
-        event conn_weird("unknown_HTTP2_method", c, method);
+        event conn_weird("unknown_HTTP2_method", c, method, "HTTP2_Analyzer");
 }
 
 event http2_reply(c: connection, is_orig: bool, stream: count, version: string,
