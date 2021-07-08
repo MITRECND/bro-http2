@@ -467,13 +467,17 @@ void HTTP2_Analyzer::destroyStreams(void)
 
 void HTTP2_Analyzer::initInflaters(void)
 {
-    for(int i = 0; i < 2; i++){
-        if (nghttp2_hd_inflate_new(&this->inflaters[i]) != 0) {
+    int rv = 0;
+
+    for(int i = 0; i < 2; i++) {
+        rv = nghttp2_hd_inflate_new(&this->inflaters[i]);
+        if (rv != 0) {
             DEBUG_ERR("nghttp2_hd_inflate_init failed with error: %s\n", nghttp2_strerror(rv));
         }
         else{
             size_t max_table_size = 4294967295; //(size_t)this->getMaxHeaderTableSize();
-            if (nghttp2_hd_inflate_change_table_size(this->inflaters[i], max_table_size) != 0) {
+            rv = nghttp2_hd_inflate_change_table_size(this->inflaters[i], max_table_size);
+            if (rv != 0) {
                 DEBUG_ERR("nghttp2_hd_inflate_init failed with error: %s\n", nghttp2_strerror(rv));
             }
             else{
@@ -568,7 +572,7 @@ void HTTP2_Analyzer::HTTP2_StreamEnd(unsigned stream, RecordVal* stream_stats){
         vl->append(this->BuildConnVal());
         vl->append(val_mgr->GetCount(stream));
         vl->append(stream_stats);
-        DEBUG_DBG("[%3u][%1d] http2_stream_end\n", stream, orig);
+        DEBUG_DBG("[%3u] http2_stream_end\n", stream);
         this->ConnectionEvent(http2_stream_end, vl);
     }
 }

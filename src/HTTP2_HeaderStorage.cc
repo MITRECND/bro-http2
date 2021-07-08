@@ -36,7 +36,7 @@ void HTTP2_HeaderList::addHeader(std::string& name, std::string& value)
 
 void HTTP2_HeaderList::addHeader(HTTP2_HeaderStorage& header)
 {
-    DEBUG_DBG("Add Headers %s : %s!\n", header->name.c_str(), header->val.c_str());
+    DEBUG_DBG("Add Headers %s : %s!\n", header.name.c_str(), header.val.c_str());
     this->headers.push_back(header);
 }
 
