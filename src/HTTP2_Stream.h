@@ -11,7 +11,6 @@
 #include "HTTP2_Frame.h"
 #include "HTTP2.h"
 
-
 namespace analyzer { namespace mitrecnd {
 
 static constexpr size_t BROTLI_BUFFER_SIZE = 102400; // 100KB
@@ -95,7 +94,7 @@ protected:
     int dataOffset;
     size_t dataBlockCnt;
     size_t data_size;
-    zip::ZIP_Analyzer* zip;
+    zeek::analyzer::zip::ZIP_Analyzer* zip;
     BrotliDecoderState* brotli;
     uint8_t* brotli_buffer;
 

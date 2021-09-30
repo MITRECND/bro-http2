@@ -1,22 +1,21 @@
 #ifndef BRO_PLUGIN_MITRECND_HTTP2
 #define BRO_PLUGIN_MITRECND_HTTP2
 
-#include <plugin/Plugin.h>
+#include <zeek/plugin/Plugin.h>
 
-namespace plugin {
-namespace mitrecnd_HTTP2 {
+namespace plugin::mitrecnd_HTTP2 {
 
-class Plugin : public ::plugin::Plugin
+class Plugin : public zeek::plugin::Plugin
 {
 protected:
     // Overridden from plugin::Plugin.
-    plugin::Configuration Configure() override;
+    zeek::plugin::Configuration Configure() override;
 };
 
 extern Plugin plugin;
 
 }
-}
+
 
 #endif
 

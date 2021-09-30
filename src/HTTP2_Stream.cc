@@ -1,10 +1,14 @@
 #include <string>
+
 #include "HTTP2_Stream.h"
+
 #include "util.h"
-#include "analyzer/protocol/http/HTTP.h"
-#include "file_analysis/Manager.h"
+#include "zeek/analyzer/protocol/http/HTTP.h"
+#include "zeek/file_analysis/Manager.h"
+#include "zeek/Reporter.h"
+
 #include "debug.h"
-#include "Reporter.h"
+
 
 using namespace analyzer::mitrecnd;
 
@@ -14,7 +18,7 @@ using namespace analyzer::mitrecnd;
  * Description: The output handler type used by the zip decompression api.
  *
  */
-class HTTP2_HalfStream::UncompressedOutput : public analyzer::OutputHandler {
+class HTTP2_HalfStream::UncompressedOutput : public zeek::analyzer::OutputHandler {
 public:
     UncompressedOutput(HTTP2_HalfStream* s) { stream = s; }
     virtual ~UncompressedOutput() { }
@@ -159,14 +163,14 @@ void HTTP2_HalfStream::SubmitData(int len, const char* buf){
     // if partial data
     if ((this->send_size && this->contentLength > 0 && len < this->contentLength)
         || !this->send_size) {
-        file_mgr->DataIn(reinterpret_cast<const u_char*>(buf), len, this->dataOffset,
+        zeek::file_mgr->DataIn(reinterpret_cast<const u_char*>(buf), len, this->dataOffset,
                          this->analyzer->GetAnalyzerTag(), this->analyzer->Conn(),
                          this->isOrig, this->precomputed_file_id);
 
         this->dataOffset += len;
     }
     else{
-        file_mgr->DataIn(reinterpret_cast<const u_char*>(buf), len,
+        zeek::file_mgr->DataIn(reinterpret_cast<const u_char*>(buf), len,
                          this->analyzer->GetAnalyzerTag(), this->analyzer->Conn(),
                          this->isOrig, this->precomputed_file_id);
     }
@@ -178,9 +182,9 @@ void HTTP2_HalfStream::EndofData(void)
     // relay to the file manager all information it needs to uniquely identify
     // the message.
     if (!this->precomputed_file_id.empty()) {
-        file_mgr->EndOfFile(this->precomputed_file_id);
+        zeek::file_mgr->EndOfFile(this->precomputed_file_id);
     } else {
-        file_mgr->EndOfFile(this->analyzer->GetAnalyzerTag(),
+        zeek::file_mgr->EndOfFile(this->analyzer->GetAnalyzerTag(),
                             this->analyzer->Conn(),
                             this->isOrig);
     }
@@ -190,10 +194,10 @@ void HTTP2_HalfStream::DeliverBody(int len, const char* data, int trailing_CRLF)
 {
     switch (this->contentEncodingId) {
         case DATA_ENCODING_DEFLATE:
-            translateZipBody(len, data, zip::ZIP_Analyzer::DEFLATE);
+            translateZipBody(len, data, zeek::analyzer::zip::ZIP_Analyzer::DEFLATE);
             break;
         case DATA_ENCODING_GZIP:
-            translateZipBody(len, data, zip::ZIP_Analyzer::GZIP);
+            translateZipBody(len, data, zeek::analyzer::zip::ZIP_Analyzer::GZIP);
             break;
         case DATA_ENCODING_BROTLI:
             if (this->dataBlockCnt == 1) { // Begin Entity
@@ -233,8 +237,8 @@ void HTTP2_HalfStream::translateZipBody(int len, const char* data, int method)
 {
     if (!zip){
         // We don't care about the direction here.
-        zip = new zip::ZIP_Analyzer(this->analyzer->Conn(), false,
-                                    (zip::ZIP_Analyzer::Method) method);
+        zip = new zeek::analyzer::zip::ZIP_Analyzer(this->analyzer->Conn(), false,
+                                    (zeek::analyzer::zip::ZIP_Analyzer::Method) method);
         zip->SetOutputHandler(new UncompressedOutput(this));
     }
     zip->NextStream(len, (const u_char*) data, false);
@@ -269,7 +273,7 @@ void HTTP2_HalfStream::translateBrotliBody(int len, const char* data)
             {
                 BrotliDecoderErrorCode code = BrotliDecoderGetErrorCode(this->brotli);
                 const char* error_string = BrotliDecoderErrorString(code);
-                reporter->Error("Brotli decoder error: %s", error_string);
+                zeek::reporter->Error("Brotli decoder error: %s", error_string);
                 break;
             }
             case BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT:
@@ -288,7 +292,7 @@ void HTTP2_HalfStream::translateBrotliBody(int len, const char* data)
             }
             default:
                 // Unexpected/undocumented result
-                reporter->Warning("Brotli decoder returned unexpected result");
+                zeek::reporter->Warning("Brotli decoder returned unexpected result");
                 break;
         }
     } while (repeat);
@@ -300,8 +304,8 @@ void HTTP2_HalfStream::processData(HTTP2_Data_Frame* data)
         // Generate a unique file id for the file being transferred
         if(this->precomputed_file_id.empty()){
             char tmp[16];
-            uint64_t uid = calculate_unique_id(UID_POOL_DEFAULT_SCRIPT);
-            this->precomputed_file_id = uitoa_n(uid, tmp, sizeof(tmp), 62, "F");
+            uint64_t uid = zeek::util::calculate_unique_id(UID_POOL_DEFAULT_SCRIPT);
+            this->precomputed_file_id = zeek::util::uitoa_n(uid, tmp, sizeof(tmp), 62, "F");
         }
         if ( http2_begin_entity )
             this->analyzer->HTTP2_BeginEntity(this->isOrig, this->id, this->contentType);
@@ -375,9 +379,9 @@ void HTTP2_OrigStream::handlePushRequested(HTTP2_Frame* frame)
     if (header->isEndHeaders()) {
         //Request
         if(http2_request) {
-            // unescape_URI will return a 'new' BroString, but
-            // a StringVal init'd with a BroString takes ownership of the BroString
-            BroString* unescapedPath = analyzer::http::unescape_URI((const unsigned char*)this->request_path.c_str(),
+            // unescape_URI will return a 'new' zeek::String, but
+            // a StringVal init'd with a zeek::String takes ownership of the zeek::String
+            zeek::String* unescapedPath = zeek::analyzer::http::unescape_URI((const unsigned char*)this->request_path.c_str(),
                                                                     (const unsigned char*)(this->request_path.c_str() + this->request_path.length()),
                                                                     this->analyzer);
 
@@ -467,9 +471,9 @@ void HTTP2_OrigStream::Idle_State(HTTP2_Frame* frame)
             if (header->isEndHeaders()) {
                 //Request
                 if(http2_request) {
-                    // unescape_URI will return a 'new' BroString, but
-                    // a StringVal init'd with a BroString takes ownership of the BroString
-                    BroString* unescapedPath = analyzer::http::unescape_URI((const unsigned char*)this->request_path.c_str(),
+                    // unescape_URI will return a 'new' zeek::String, but
+                    // a StringVal init'd with a zeek::String takes ownership of the zeek::String
+                    zeek::String* unescapedPath = zeek::analyzer::http::unescape_URI((const unsigned char*)this->request_path.c_str(),
                                                                             (const unsigned char*)(this->request_path.c_str() + this->request_path.length()),
                                                                             this->analyzer);
 
@@ -481,7 +485,7 @@ void HTTP2_OrigStream::Idle_State(HTTP2_Frame* frame)
                 // At this point we have enough information to determine if the content-length sent is
                 // accurate based on the encoding of the file
                 if (this->send_size && this->contentLength > 0) {
-                        file_mgr->SetSize(this->contentLength, this->analyzer->GetAnalyzerTag(),
+                        zeek::file_mgr->SetSize(this->contentLength, this->analyzer->GetAnalyzerTag(),
                                           this->analyzer->Conn(), this->isOrig, this->precomputed_file_id);
                 }
 
@@ -724,7 +728,7 @@ void HTTP2_RespStream::Idle_State(HTTP2_Frame* frame)
                 }
 
                 if (this->send_size && this->contentLength > 0) {
-                        file_mgr->SetSize(this->contentLength, this->analyzer->GetAnalyzerTag(),
+                        zeek::file_mgr->SetSize(this->contentLength, this->analyzer->GetAnalyzerTag(),
                                           this->analyzer->Conn(), this->isOrig, this->precomputed_file_id);
                 }
 
@@ -891,16 +895,16 @@ bool HTTP2_Stream::handleFrame(HTTP2_Frame* f, bool orig) {
 
 bool HTTP2_Stream::handleStreamEnd() {
     if (http2_stream_end) {
-        RecordVal* stream_stats = new RecordVal(BifType::Record::http2_stream_stat);
+        auto stream_stats = zeek::make_intrusive<zeek::RecordVal>(zeek::BifType::Record::http2_stream_stat);
         // process is_orig == true first
         stream_stats->Assign(
-            0, val_mgr->GetCount(
+            0, zeek::val_mgr->Count(
                 static_cast<uint64_t>(this->halfStreams[1]->getDataSize())
             )
         );
 
         stream_stats->Assign(
-            1, val_mgr->GetCount(
+            1, zeek::val_mgr->Count(
                 static_cast<uint64_t>(this->halfStreams[0]->getDataSize())
             )
         );
