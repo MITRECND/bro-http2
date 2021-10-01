@@ -58,7 +58,7 @@ zeek::RecordValPtr HTTP2_HeaderList::BuildHeaderVal(HTTP2_HeaderStorage& h)
 {
     static auto mime_header_rec = zeek::id::find_type<zeek::RecordType>("mime_header_rec");
 
-     auto upper_name = zeek::make_intrusive<zeek::StringVal>(h.name);
+    auto upper_name = zeek::make_intrusive<zeek::StringVal>(h.name);
     upper_name->ToUpper();
 
     auto header_record = zeek::make_intrusive<zeek::RecordVal>(mime_header_rec);
