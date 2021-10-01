@@ -752,14 +752,14 @@ void HTTP2_Analyzer::HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigne
 }
 
 void HTTP2_Analyzer::HTTP2_Ping_Event(bool orig, unsigned stream, uint8_t length, const char* data){
+    DEBUG_INFO("http2_ping_event\n");
     this->EnqueueConnEvent(
         http2_ping_event,
         this->ConnVal(),
         zeek::val_mgr->Bool(orig),
         zeek::val_mgr->Count(stream),
         zeek::make_intrusive<zeek::StringVal>(length, data)
-    )
-    DEBUG_INFO("http2_ping_event\n");
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_GoAway_Event(bool orig, unsigned stream, unsigned lastStream,
@@ -799,7 +799,7 @@ void HTTP2_Analyzer::HTTP2_Continuation_Event(bool orig, unsigned stream, uint32
 }
 
 void HTTP2_Analyzer::HTTP2_Event(std::string& category, std::string& detail){
-    if ( http2_event ){
+    if (http2_event) {
         DEBUG_DBG("http2_event\n");
         this->EnqueueConnEvent(
             http2_event,
