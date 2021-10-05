@@ -1,6 +1,5 @@
 #include <string.h>
 
-#include "zeek-config.h"
 #include "HTTP2_HeaderStorage.h"
 #include "HTTP2.h"
 

@@ -1,10 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
 project(ZeekPluginHTTP2)
-
-if ( NOT ZEEK_DIST )
-    message(FATAL ERROR "ZEEK_DIST not set")
-endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 

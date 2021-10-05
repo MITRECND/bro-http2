@@ -3,9 +3,9 @@
 #ifndef ANALYZER_PROTOCOL_HTTP2_HTTP2_HEADER_STORAGE_H
 #define ANALYZER_PROTOCOL_HTTP2_HTTP2_HEADER_STORAGE_H
 
-#include "ZeekString.h"
-#include "util.h"
-#include "Val.h"
+#include "zeek/ZeekString.h"
+#include "zeek/util.h"
+#include "zeek/Val.h"
 
 #include "nghttp2.h"
 #include "nghttp2ver.h"

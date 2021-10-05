@@ -3,17 +3,17 @@
 
 #include <string>
 #include <unordered_map>
-#include "ZeekString.h"
-#include "analyzer/protocol/tcp/TCP.h"
-#include "analyzer/protocol/tcp/ContentLine.h"
-#include "analyzer/protocol/pia/PIA.h"
-#include "analyzer/protocol/zip/ZIP.h"
-#include "analyzer/protocol/mime/MIME.h"
-#include "IPAddr.h"
+#include "zeek/ZeekString.h"
+#include "zeek/analyzer/protocol/tcp/TCP.h"
+#include "zeek/analyzer/protocol/tcp/ContentLine.h"
+#include "zeek/analyzer/protocol/pia/PIA.h"
+#include "zeek/analyzer/protocol/zip/ZIP.h"
+#include "zeek/analyzer/protocol/mime/MIME.h"
+#include "zeek/IPAddr.h"
 #include "events.bif.h"
 #include "http2.bif.h"
 #include "debug.h"
-#include "Reporter.h"
+#include "zeek/Reporter.h"
 
 
 #include "HTTP2_FrameReassembler.h"

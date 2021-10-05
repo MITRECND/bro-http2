@@ -1,8 +1,9 @@
 #ifndef ANALYZER_PROTOCOL_HTTP2_HTTP2_STREAM_H
 #define ANALYZER_PROTOCOL_HTTP2_HTTP2_STREAM_H
 
-#include "analyzer/protocol/zip/ZIP.h"
-#include "util.h"
+#include "zeek/analyzer/protocol/zip/ZIP.h"
+#include "zeek/util.h"
+
 #include "decode.h"
 #include "nghttp2.h"
 #include "nghttp2ver.h"

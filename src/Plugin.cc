@@ -1,6 +1,6 @@
 #include "Plugin.h"
 #include "HTTP2.h"
-#include "analyzer/Component.h"
+#include "zeek/analyzer/Component.h"
 
 namespace plugin::mitrecnd_HTTP2 { Plugin plugin; }
 

@@ -2,7 +2,7 @@
 
 #include "HTTP2_Stream.h"
 
-#include "util.h"
+#include "zeek/util.h"
 #include "zeek/analyzer/protocol/http/HTTP.h"
 #include "zeek/file_analysis/Manager.h"
 #include "zeek/Reporter.h"

@@ -2,12 +2,12 @@
 
 #include "HTTP2.h"
 
-#include "Var.h"
-#include "NetVar.h"
-#include "analyzer/protocol/tcp/TCP_Reassembler.h"
-#include "analyzer/protocol/mime/MIME.h"
+#include "zeek/Var.h"
+#include "zeek/NetVar.h"
+#include "zeek/analyzer/protocol/tcp/TCP_Reassembler.h"
+#include "zeek/analyzer/protocol/mime/MIME.h"
 #include "debug.h"
-#include "Reporter.h"
+#include "zeek/Reporter.h"
 
 using namespace analyzer::mitrecnd;
 
