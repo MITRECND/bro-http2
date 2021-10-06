@@ -5,11 +5,11 @@
 
 #include "HTTP2.h"
 #include "HTTP2_Frame.h"
-#include "util.h"
+#include "zeek/util.h"
 #include "nghttp2.h"
 #include "nghttp2ver.h"
 #include "debug.h"
-#include "Reporter.h"
+#include "zeek/Reporter.h"
 
 using namespace analyzer::mitrecnd;
 
@@ -95,68 +95,68 @@ bool HTTP2_Frame::checkPadding(uint8_t* payload, uint32_t len, uint8_t &padLengt
 */
 /**
  * const char* HTTP2_Frame::errorToText(uint32_t error)
- * 
+ *
  * Description: Convert header decompression error code into
  * ASCII string for display.
  *
- * 
+ *
  * @param error the error code
- * 
- * @return const char* 
+ *
+ * @return const char*
  */
 const std::string HTTP2_Frame::errorToText(uint32_t error)
 {
     std::string s = "NGHTTP2_UNKNOWN_ERROR";
 
     switch (error) {
-    case  NGHTTP2_NO_ERROR: 
+    case  NGHTTP2_NO_ERROR:
         s = "NGHTTP2_NO_ERROR";
         break;
-    case  NGHTTP2_PROTOCOL_ERROR: 
+    case  NGHTTP2_PROTOCOL_ERROR:
         s = "NGHTTP2_PROTOCOL_ERROR";
         break;
-    case  NGHTTP2_INTERNAL_ERROR: 
+    case  NGHTTP2_INTERNAL_ERROR:
         s = "NGHTTP2_INTERNAL_ERROR";
         break;
-    case  NGHTTP2_FLOW_CONTROL_ERROR: 
+    case  NGHTTP2_FLOW_CONTROL_ERROR:
         s = "NGHTTP2_FLOW_CONTROL_ERROR";
         break;
-    case  NGHTTP2_SETTINGS_TIMEOUT: 
+    case  NGHTTP2_SETTINGS_TIMEOUT:
         s = "NGHTTP2_SETTINGS_TIMEOUT";
         break;
-    case  NGHTTP2_STREAM_CLOSED: 
+    case  NGHTTP2_STREAM_CLOSED:
         s = "NGHTTP2_STREAM_CLOSED";
         break;
-    case  NGHTTP2_FRAME_SIZE_ERROR: 
+    case  NGHTTP2_FRAME_SIZE_ERROR:
         s = "NGHTTP2_FRAME_SIZE_ERROR";
         break;
-    case  NGHTTP2_REFUSED_STREAM: 
+    case  NGHTTP2_REFUSED_STREAM:
         s = "NGHTTP2_REFUSED_STREAM";
         break;
-    case  NGHTTP2_CANCEL: 
+    case  NGHTTP2_CANCEL:
         s = "NGHTTP2_CANCEL";
         break;
-    case  NGHTTP2_COMPRESSION_ERROR: 
+    case  NGHTTP2_COMPRESSION_ERROR:
         s = "NGHTTP2_COMPRESSION_ERROR";
         break;
-    case  NGHTTP2_CONNECT_ERROR: 
+    case  NGHTTP2_CONNECT_ERROR:
         s = "NGHTTP2_CONNECT_ERROR";
         break;
-    case  NGHTTP2_ENHANCE_YOUR_CALM: 
+    case  NGHTTP2_ENHANCE_YOUR_CALM:
         s = "NGHTTP2_ENHANCE_YOUR_CALM";
         break;
-    case  NGHTTP2_INADEQUATE_SECURITY: 
+    case  NGHTTP2_INADEQUATE_SECURITY:
         s = "NGHTTP2_INADEQUATE_SECURITY";
         break;
-    case  NGHTTP2_HTTP_1_1_REQUIRED: 
+    case  NGHTTP2_HTTP_1_1_REQUIRED:
         s = "NGHTTP2_HTTP_1_1_REQUIRED";
         break;
-    default: 
+    default:
         break;
     }
 
     return s;
-    
+
 }
 
 

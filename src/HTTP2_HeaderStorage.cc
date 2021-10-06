@@ -1,10 +1,13 @@
 #include <string.h>
+
 #include "HTTP2_HeaderStorage.h"
 #include "HTTP2.h"
-#include "util.h"
-#include "Val.h"
+
+#include "zeek/util.h"
+#include "zeek/Val.h"
+#include "zeek/Reporter.h"
+
 #include "debug.h"
-#include "Reporter.h"
 
 using namespace analyzer::mitrecnd;
 
@@ -50,26 +53,29 @@ void HTTP2_HeaderList::flushHeaders()
     this->headers.clear();
 }
 
-RecordVal* HTTP2_HeaderList::BuildHeaderVal(HTTP2_HeaderStorage& h)
+zeek::RecordValPtr HTTP2_HeaderList::BuildHeaderVal(HTTP2_HeaderStorage& h)
 {
-    RecordVal* header_record = new RecordVal(mime_header_rec);
-    header_record->Assign(0, mime::new_string_val(h.name.length(), h.name.c_str())->ToUpper());
-    header_record->Assign(1, mime::new_string_val(h.val.length(), h.val.c_str()));
+    static auto mime_header_rec = zeek::id::find_type<zeek::RecordType>("mime_header_rec");
+
+    auto upper_name = zeek::make_intrusive<zeek::StringVal>(h.name);
+    upper_name->ToUpper();
+
+    auto header_record = zeek::make_intrusive<zeek::RecordVal>(mime_header_rec);
+    header_record->Assign(0, std::move(upper_name));
+    header_record->Assign(1, zeek::make_intrusive<zeek::StringVal>(h.val));
     return header_record;
 }
 
-TableVal* HTTP2_HeaderList::BuildHeaderTable(void)
+zeek::TableValPtr HTTP2_HeaderList::BuildHeaderTable(void)
 {
-    TableVal* t = new TableVal(mime_header_list);
+    static auto mime_header_list = zeek::id::find_type<zeek::TableType>("mime_header_list");
+    auto t = zeek::make_intrusive<zeek::TableVal>(mime_header_list);
 
     for (unsigned int i = 0; i < this->headers.size(); ++i)
     {
-        Val* index = val_mgr->GetCount(i+1);  // index starting from 1
-
-        RecordVal* header_record = BuildHeaderVal(this->headers[i]);
-        t->Assign(index, header_record);
-
-        Unref(index);
+        auto index = zeek::val_mgr->Count(i+1);  // index starting from 1
+        auto header_record = BuildHeaderVal(this->headers[i]);
+        t->Assign(std::move(index), header_record);
     }
 
     return t;

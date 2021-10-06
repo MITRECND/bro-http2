@@ -4,7 +4,7 @@
 #include "nghttp2.h"
 #include "nghttp2ver.h"
 #include "debug.h"
-#include "Reporter.h"
+#include "zeek/Reporter.h"
 
 using namespace analyzer::mitrecnd;
 using namespace std;

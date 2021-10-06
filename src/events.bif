@@ -2,10 +2,10 @@
 # In this file, you'll define the events that your analyzer will
 # generate. A sample event is included.
 
-## Generated for HTTP2 requests. Bro supports persistent and pipelined HTTP2
+## Generated for HTTP2 requests. Zeek supports persistent and pipelined HTTP2
 ## sessions and raises corresponding events as it parses client/server
 ## dialogues. This event is generated as soon as a request's initial line has
-## been parsed, and before any :bro:id:`http2_header` events are raised.
+## been parsed, and before any :zeek:id:`http2_header` events are raised.
 ##
 ## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
 ## for more information about the HTTP2 protocol.
@@ -30,15 +30,15 @@
 ##
 ## push: Whether this was a push promise initiated transaction
 ##
-## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+## .. zeek:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
 ##    http2_entity_data http2_event http2_header http2_message_done http2_reply http2_stats
 ##    truncate_http2_URI
 event http2_request%(c: connection, is_orig: bool, stream: count, method: string, authority: string, host: string, original_URI: string, unescaped_URI: string, version: string, push: bool%);
 
-## Generated for HTTP2 replies. Bro supports persistent and pipelined HTTP2
+## Generated for HTTP2 replies. Zeek supports persistent and pipelined HTTP2
 ## sessions and raises corresponding events as it parses client/server
 ## dialogues. This event is generated as soon as a reply's initial line has
-## been parsed, and before any :bro:id:`http2_header` events are raised.
+## been parsed, and before any :zeek:id:`http2_header` events are raised.
 ##
 ## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
 ## for more information about the HTTP2 protocol.
@@ -55,7 +55,7 @@ event http2_request%(c: connection, is_orig: bool, stream: count, method: string
 ##
 ## reason: The textual description returned by the server along with *code*.
 ##
-## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+## .. zeek:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
 ##    http2_entity_data http2_event http2_header http2_message_done http2_request
 ##    http2_stats
 event http2_reply%(c: connection, is_orig: bool, stream: count, version: string, code: count, reason: string%);
@@ -88,7 +88,7 @@ event http2_stream_start%(c: connection, is_orig: bool, stream:count%);
 ##
 event http2_stream_end%(c: connection, stream: count, stats: http2_stream_stat%);
 
-## Generated for HTTP2 headers. Bro supports persistent and pipelined HTTP2
+## Generated for HTTP2 headers. Zeek supports persistent and pipelined HTTP2
 ## sessions and raises corresponding events as it parses client/server
 ## dialogues.
 ##
@@ -105,7 +105,7 @@ event http2_stream_end%(c: connection, stream: count, stats: http2_stream_stat%)
 ##
 ## value: The value of the header.
 ##
-## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+## .. zeek:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
 ##    http2_entity_data http2_event  http2_message_done http2_reply http2_request
 ##    http2_stats
 ##
@@ -114,7 +114,7 @@ event http2_stream_end%(c: connection, stream: count, stats: http2_stream_stat%)
 event http2_header%(c: connection, is_orig: bool, stream: count, name: string, value: string%);
 
 ## Generated for HTTP2 headers, passing on all headers of an HTTP2 message at
-## once. Bro supports persistent and pipelined HTTP2 sessions and raises
+## once. Zeek supports persistent and pipelined HTTP2 sessions and raises
 ## corresponding events as it parses client/server dialogues.
 ##
 ## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
@@ -130,7 +130,7 @@ event http2_header%(c: connection, is_orig: bool, stream: count, name: string, v
 ##        The table is indexed by the position of the header (1 for the first,
 ##        2 for the second, etc.).
 ##
-## .. bro:see::  http2_begin_entity http2_content_type http2_end_entity http2_entity_data
+## .. zeek:see::  http2_begin_entity http2_content_type http2_end_entity http2_entity_data
 ##    http2_event http2_header http2_message_done http2_reply http2_request http2_stats
 ##
 ## .. note:: This event is also raised for headers found in nested body
@@ -140,7 +140,7 @@ event http2_all_headers%(c: connection, is_orig: bool, stream: count, hlist: mim
 ## Generated when starting to parse an HTTP2 body entity. This event is generated
 ## at least once for each non-empty (client or server) HTTP2 body; and
 ## potentially more than once if the body contains further nested MIME
-## entities. Bro raises this event just before it starts parsing each entity's
+## entities. Zeek raises this event just before it starts parsing each entity's
 ## content.
 ##
 ## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
@@ -153,7 +153,7 @@ event http2_all_headers%(c: connection, is_orig: bool, stream: count, hlist: mim
 ## stream: Unique identifier of the stream within its associated connection.
 ##
 ##
-## .. bro:see:: http2_all_headers  http2_content_type http2_end_entity http2_entity_data
+## .. zeek:see:: http2_all_headers  http2_content_type http2_end_entity http2_entity_data
 ##    http2_event http2_header http2_message_done http2_reply http2_request http2_stats
 ##    mime_begin_entity
 event http2_begin_entity%(c: connection, is_orig: bool, stream: count, contentType: string%);
@@ -161,7 +161,7 @@ event http2_begin_entity%(c: connection, is_orig: bool, stream: count, contentTy
 ## Generated when finishing parsing an HTTP2 body entity. This event is generated
 ## at least once for each non-empty (client or server) HTTP2 body; and
 ## potentially more than once if the body contains further nested MIME
-## entities. Bro raises this event at the point when it has finished parsing an
+## entities. Zeek raises this event at the point when it has finished parsing an
 ## entity's content.
 ##
 ## See `Wikipedia <https://en.wikipedia.org/wiki/HTTP%2F2>`__
@@ -174,7 +174,7 @@ event http2_begin_entity%(c: connection, is_orig: bool, stream: count, contentTy
 ## stream: Unique identifier of the stream within its associated connection.
 ##
 ##
-## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_entity_data
+## .. zeek:see:: http2_all_headers http2_begin_entity http2_content_type http2_entity_data
 ##    http2_event http2_header http2_message_done http2_reply http2_request
 ##    http2_stats   mime_end_entity
 event http2_end_entity%(c: connection, is_orig: bool, stream: count%);
@@ -186,7 +186,7 @@ event http2_end_entity%(c: connection, is_orig: bool, stream: count%);
 ## A common idiom for using this event is to first *reassemble* the data
 ## at the scripting layer by concatenating it to a successively growing
 ## string; and only perform further content analysis once the corresponding
-## :bro:id:`http2_end_entity` event has been raised. Note, however, that doing so
+## :zeek:id:`http2_end_entity` event has been raised. Note, however, that doing so
 ## can be quite expensive for HTTP2 tranders. At the very least, one should
 ## impose an upper size limit on how much data is being buffered.
 ##
@@ -204,7 +204,7 @@ event http2_end_entity%(c: connection, is_orig: bool, stream: count%);
 ##
 ## data: One chunk of raw entity data.
 ##
-## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+## .. zeek:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
 ##    http2_event http2_header http2_message_done http2_reply http2_request http2_stats
 ##    mime_entity_data http2_entity_data_delivery_size skip_http2_data
 event http2_entity_data%(c: connection, is_orig: bool, stream: count, length: count, data: string%);
@@ -227,7 +227,7 @@ event http2_entity_data%(c: connection, is_orig: bool, stream: count, length: co
 ##
 event http2_content_type%(c: connection, is_orig: bool, stream: count, contentType: string%);
 
-## Generated once at the end of parsing an HTTP2 message. Bro supports persistent
+## Generated once at the end of parsing an HTTP2 message. Zeek supports persistent
 ## and pipelined HTTP2 sessions and raises corresponding events as it parses
 ## client/server dialogues. A "message" is one top-level HTTP2 entity, such as a
 ## complete request or reply. Each message can have further nested sub-entities
@@ -246,7 +246,7 @@ event http2_content_type%(c: connection, is_orig: bool, stream: count, contentTy
 ##
 ## stat: Further meta information about the message.
 ##
-## .. bro:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
+## .. zeek:see:: http2_all_headers http2_begin_entity http2_content_type http2_end_entity
 ##    http2_entity_data http2_event http2_header  http2_reply http2_request http2_stats
 ##event http2_message_done%(c: connection, is_orig: bool, stream: count, stat: http_message_stat%);
 
@@ -389,8 +389,8 @@ event http2_ping_event%(c: connection, is_orig: bool, stream: count, data: strin
 ##
 ## stream: Unique identifier of the stream within its associated connection.
 ##
-## lastStream: the highest-numbered stream identifier for which the sender of 
-##	           the GOAWAY frame might have taken some action on or might yet 
+## lastStream: the highest-numbered stream identifier for which the sender of
+##	           the GOAWAY frame might have taken some action on or might yet
 ##	           take action on
 ##
 ## error: the reason for closing the connection.
@@ -408,7 +408,7 @@ event http2_goaway_event%(c: connection, is_orig: bool, stream: count, lastStrea
 ##
 ## stream: Unique identifier of the stream within its associated connection.
 ##
-## increment: the number of octets that the sender can transmit in addition 
+## increment: the number of octets that the sender can transmit in addition
 ##            to the existing flow-control window
 ##
 event http2_windowupdate_event%(c: connection, is_orig: bool, stream: count, increment: count%);

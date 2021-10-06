@@ -3,9 +3,9 @@
 #ifndef ANALYZER_PROTOCOL_HTTP2_HTTP2_HEADER_STORAGE_H
 #define ANALYZER_PROTOCOL_HTTP2_HTTP2_HEADER_STORAGE_H
 
-#include "BroString.h"
-#include "util.h"
-#include "Val.h"
+#include "zeek/ZeekString.h"
+#include "zeek/util.h"
+#include "zeek/Val.h"
 
 #include "nghttp2.h"
 #include "nghttp2ver.h"
@@ -60,28 +60,28 @@ public:
     void flushHeaders();
 
     /**
-     * RecordVal*
+     * zeek::RecordValPtr
      *  HTTP2_HeaderList::BuildHeaderVal(HTTP2_HeaderStorage h)
      *
      * Description: Create a header record entry for use when
-     * building a header table to be consumed by bro.
+     * building a header table to be consumed by zeek.
      *
      *
      * @param h             reference to the header storage
      *                      structure to use when building the
      *                      header record entry.
      *
-     * @return RecordVal*   reference to resulting header record.
+     * @return zeek::RecordValPtr   reference to resulting header record.
      */
-    RecordVal* BuildHeaderVal(HTTP2_HeaderStorage& h);
+    zeek::RecordValPtr BuildHeaderVal(HTTP2_HeaderStorage& h);
     /**
      * TableVal* HTTP2_HeaderList::BuildHeaderTable(void)
      *
-     * Description: Create a header table to be consumed by bro.
+     * Description: Create a header table to be consumed by zeek.
      *
      * @return TableVal*    reference to the resulting header table
      */
-    TableVal* BuildHeaderTable(void);
+    zeek::TableValPtr BuildHeaderTable(void);
 
     std::vector<HTTP2_HeaderStorage> headers;
 };

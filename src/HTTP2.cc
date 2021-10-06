@@ -2,12 +2,12 @@
 
 #include "HTTP2.h"
 
-#include "Var.h"
-#include "NetVar.h"
-#include "analyzer/protocol/tcp/TCP_Reassembler.h"
-#include "analyzer/protocol/mime/MIME.h"
+#include "zeek/Var.h"
+#include "zeek/NetVar.h"
+#include "zeek/analyzer/protocol/tcp/TCP_Reassembler.h"
+#include "zeek/analyzer/protocol/mime/MIME.h"
 #include "debug.h"
-#include "Reporter.h"
+#include "zeek/Reporter.h"
 
 using namespace analyzer::mitrecnd;
 
@@ -28,8 +28,8 @@ static constexpr uint8_t CONN_PREFACE_LENGTH = static_cast<uint8_t>(sizeof(conne
 ** HTTP2_Analyzer
 */
 
-HTTP2_Analyzer::HTTP2_Analyzer(Connection* conn)
-: tcp::TCP_ApplicationAnalyzer("HTTP2", conn)
+HTTP2_Analyzer::HTTP2_Analyzer(zeek::Connection* conn)
+: zeek::analyzer::tcp::TCP_ApplicationAnalyzer("HTTP2", conn)
     {
     DEBUG_INFO("Create Analyzer: [%p]\n",Conn());
     this->connectionActive = false;
@@ -81,16 +81,16 @@ HTTP2_Analyzer::~HTTP2_Analyzer()
 
 void HTTP2_Analyzer::Done()
     {
-    tcp::TCP_ApplicationAnalyzer::Done();
+    zeek::analyzer::tcp::TCP_ApplicationAnalyzer::Done();
     }
 
 void HTTP2_Analyzer::EndpointEOF(bool is_orig)
     {
-    tcp::TCP_ApplicationAnalyzer::EndpointEOF(is_orig);
+    zeek::analyzer::tcp::TCP_ApplicationAnalyzer::EndpointEOF(is_orig);
     }
 
 void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
-    tcp::TCP_ApplicationAnalyzer::DeliverStream(len, data, orig);
+    zeek::analyzer::tcp::TCP_ApplicationAnalyzer::DeliverStream(len, data, orig);
 
     // If we see the connection Preface we will have to skip it to realign the
     // stream for processing
@@ -199,40 +199,39 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
 }
 
 void HTTP2_Analyzer::Undelivered(uint64_t seq, int len, bool orig){
-    tcp::TCP_ApplicationAnalyzer::Undelivered(seq, len, orig);
+    zeek::analyzer::tcp::TCP_ApplicationAnalyzer::Undelivered(seq, len, orig);
     this->had_gap = true;
 }
 
-static inline RecordVal* generateSettingsRecord(HTTP2_Settings_Frame* frame) {
+static inline zeek::RecordValPtr generateSettingsRecord(HTTP2_Settings_Frame* frame) {
     uint32_t val;
-    RecordVal* settings_rec = new RecordVal(BifType::Record::http2_settings);
+    auto settings_rec = zeek::make_intrusive<zeek::RecordVal>(zeek::BifType::Record::http2_settings);
 
     if(frame->getHeaderTableSize(val)){
-        settings_rec->Assign(0, val_mgr->GetCount(val));
+        settings_rec->Assign(0, zeek::val_mgr->Count(val));
     }
     if(frame->getEnablePush(val)){
-        settings_rec->Assign(1, val_mgr->GetBool(val));
+        settings_rec->Assign(1, zeek::val_mgr->Bool(val));
     }
     if(frame->getMaxConcurrentStreams(val)){
-        settings_rec->Assign(2, val_mgr->GetCount(val));
+        settings_rec->Assign(2, zeek::val_mgr->Count(val));
     }
     if(frame->getInitialWindowSize(val)){
-        settings_rec->Assign(3, val_mgr->GetCount(val));
+        settings_rec->Assign(3, zeek::val_mgr->Count(val));
     }
     if(frame->getMaxFrameSize(val)){
-        settings_rec->Assign(4, val_mgr->GetCount(val));
+        settings_rec->Assign(4, zeek::val_mgr->Count(val));
     }
     if(frame->getMaxHeaderListSize(val)){
-        settings_rec->Assign(5, val_mgr->GetCount(val));
+        settings_rec->Assign(5, zeek::val_mgr->Count(val));
     }
 
     if(frame->unrecognizedSettings()){
-        TableVal* unrec_table = new TableVal(BifType::Table::http2_settings_unrecognized_table);
+        auto unrec_table = zeek::make_intrusive<zeek::TableVal>(zeek::BifType::Table::http2_settings_unrecognized_table);
         auto unrec = frame->getUnrecognizedSettings();
         for (auto it=unrec.begin(); it != unrec.end(); it++) {
-            Val* index = val_mgr->GetCount(it->first);
-            unrec_table->Assign(index, val_mgr->GetCount(it->second));
-            Unref(index);
+            auto index = zeek::val_mgr->Count(it->first);
+            unrec_table->Assign(index, zeek::val_mgr->Count(it->second));
         }
         settings_rec->Assign(6, unrec_table);
     }
@@ -533,131 +532,145 @@ bool HTTP2_Analyzer::connectionPrefaceDetected(int len, const u_char* data)
 */
 void HTTP2_Analyzer::HTTP2_Request(bool orig, unsigned stream, std::string& method,
                                    std::string& authority, std::string& host,
-                                   std::string& path, BroString* unescaped, bool push){
+                                   std::string& path, zeek::String* unescaped, bool push){
     //this->num_requests++;
     if ( http2_request ){
-        val_list* vl = new val_list;
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(new StringVal(method));
-        vl->append(new StringVal(authority));
-        vl->append(new StringVal(host));
-        vl->append(new StringVal(path));
-        vl->append(new StringVal(unescaped));
-        vl->append(new StringVal(fmt("%.1f", 2.0)));
-        vl->append(val_mgr->GetBool(push));
         DEBUG_DBG("[%3u][%1d] http2_request\n", stream, orig);
-        this->ConnectionEvent(http2_request, vl);
+        this->EnqueueConnEvent(
+            http2_request,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            zeek::make_intrusive<zeek::StringVal>(method),
+            zeek::make_intrusive<zeek::StringVal>(authority),
+            zeek::make_intrusive<zeek::StringVal>(host),
+            zeek::make_intrusive<zeek::StringVal>(path),
+            zeek::make_intrusive<zeek::StringVal>(unescaped),
+            zeek::make_intrusive<zeek::StringVal>(zeek::util::fmt("%.1f", 2.0)),
+            zeek::val_mgr->Bool(push)
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_Reply(bool orig, unsigned stream, uint16_t status){
     if ( http2_reply ){
-        val_list* vl = new val_list;
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(new StringVal(fmt("%.1f", 2.0)));
-        vl->append(val_mgr->GetCount(status));
-        vl->append(new StringVal("<empty>"));
         DEBUG_DBG("[%3u][%1d] http2_reply\n", stream, orig);
-        this->ConnectionEvent(http2_reply, vl);
+        this->EnqueueConnEvent(
+            http2_reply,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            zeek::make_intrusive<zeek::StringVal>(zeek::util::fmt("%.1f", 2.0)),
+            zeek::val_mgr->Count(status),
+            zeek::make_intrusive<zeek::StringVal>("<empty>")
+        );
     }
 }
 
-void HTTP2_Analyzer::HTTP2_StreamEnd(unsigned stream, RecordVal* stream_stats){
+void HTTP2_Analyzer::HTTP2_StreamEnd(unsigned stream, zeek::RecordValPtr stream_stats){
     if ( http2_stream_end ){
-        val_list* vl = new val_list;
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(stream_stats);
         DEBUG_DBG("[%3u] http2_stream_end\n", stream);
-        this->ConnectionEvent(http2_stream_end, vl);
+        this->EnqueueConnEvent(
+            http2_stream_end,
+            this->ConnVal(),
+            zeek::val_mgr->Count(stream),
+            stream_stats
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_StreamStart(bool orig, unsigned stream){
     if ( http2_stream_start ){
-        val_list* vl = new val_list;
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
         DEBUG_DBG("[%3u][%1d] http2_stream_start\n", stream, orig);
-        this->ConnectionEvent(http2_stream_start, vl);
+        this->EnqueueConnEvent(
+            http2_stream_start,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream)
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_Header(bool orig, unsigned stream, std::string& name, std::string& value){
     if ( http2_header ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append((new StringVal(name))->ToUpper());
-        vl->append(new StringVal(value));
+
+        auto upper_name = zeek::make_intrusive<zeek::StringVal>(name);
+        upper_name->ToUpper();
+
         DEBUG_DBG("http2_header\n");
-        this->ConnectionEvent(http2_header, vl);
+        this->EnqueueConnEvent(
+            http2_header,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            std::move(upper_name),
+            zeek::make_intrusive<zeek::StringVal>(value)
+        );
     }
 }
 
-void HTTP2_Analyzer::HTTP2_AllHeaders(bool orig, unsigned stream, TableVal* hlist){
+void HTTP2_Analyzer::HTTP2_AllHeaders(bool orig, unsigned stream, zeek::TableValPtr hlist){
     if ( http2_all_headers ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(hlist);
         DEBUG_DBG("http2_all_headers\n");
-        this->ConnectionEvent(http2_all_headers, vl);
+        this->EnqueueConnEvent(
+            http2_all_headers,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            hlist
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_BeginEntity(bool orig, unsigned stream, std::string& contentType){
     if ( http2_begin_entity ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(new StringVal(contentType));
         DEBUG_DBG("http2_begin_entity\n");
-        this->ConnectionEvent(http2_begin_entity, vl);
+        this->EnqueueConnEvent(
+            http2_begin_entity,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            zeek::make_intrusive<zeek::StringVal>(contentType)
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_EndEntity(bool orig, unsigned stream){
     if ( http2_end_entity ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
         DEBUG_DBG("http2_end_entity\n");
-        this->ConnectionEvent(http2_end_entity, vl);
+        this->EnqueueConnEvent(
+            http2_end_entity,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream)
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_EntityData(bool orig, unsigned stream, int len, const char* data){
     if ( http2_entity_data ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(val_mgr->GetCount(len));
-        vl->append(new StringVal(len, data));
         DEBUG_DBG("http2_entity_data\n");
-        this->ConnectionEvent(http2_entity_data, vl);
+        this->EnqueueConnEvent(
+            http2_entity_data,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            zeek::val_mgr->Count(len),
+            zeek::make_intrusive<zeek::StringVal>(len, data)
+        );
     }
 }
 
 void HTTP2_Analyzer::HTTP2_ContentType(bool orig, unsigned stream, std::string& contentType){
     if ( http2_content_type ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(val_mgr->GetBool(orig));
-        vl->append(val_mgr->GetCount(stream));
-        vl->append(new StringVal(contentType));
         DEBUG_DBG("http2_content_type\n");
-        this->ConnectionEvent(http2_content_type, vl);
+        this->EnqueueConnEvent(
+            http2_content_type,
+            this->ConnVal(),
+            zeek::val_mgr->Bool(orig),
+            zeek::val_mgr->Count(stream),
+            zeek::make_intrusive<zeek::StringVal>(contentType)
+        );
     }
 }
 
@@ -666,123 +679,133 @@ void HTTP2_Analyzer::HTTP2_ContentType(bool orig, unsigned stream, std::string& 
 */
 
 void HTTP2_Analyzer::HTTP2_Data_Event(bool orig, unsigned stream, uint32_t len, const char* data){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetCount(len));
-    vl->append(new StringVal(len, data));
     DEBUG_INFO("http2_data_event\n");
-    this->ConnectionEvent(http2_data_event, vl);
+    this->EnqueueConnEvent(
+        http2_data_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Count(len),
+        zeek::make_intrusive<zeek::StringVal>(len, data)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_Header_Event(bool orig, unsigned stream, uint32_t len, const char* headerData){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetCount(len));
-    vl->append(new StringVal(len, headerData));
     DEBUG_INFO("http2_header_event\n");
-    this->ConnectionEvent(http2_header_event, vl);
+    this->EnqueueConnEvent(
+        http2_header_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Count(len),
+        zeek::make_intrusive<zeek::StringVal>(len, headerData)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_Priority_Event(bool orig, unsigned stream, bool exclusive, unsigned priStream, unsigned weight){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetBool(exclusive));
-    vl->append(val_mgr->GetCount(priStream));
-    vl->append(val_mgr->GetCount(weight));
     DEBUG_INFO("http2_priority_event\n");
-    this->ConnectionEvent(http2_priority_event, vl);
+    this->EnqueueConnEvent(
+        http2_priority_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Bool(exclusive),
+        zeek::val_mgr->Count(priStream),
+        zeek::val_mgr->Count(weight)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_RstStream_Event(bool orig, unsigned stream, const std::string& error){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(new StringVal(error));
     DEBUG_INFO("http2_rststream_event\n");
-    this->ConnectionEvent(http2_rststream_event, vl);
+    this->EnqueueConnEvent(
+        http2_rststream_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::make_intrusive<zeek::StringVal>(error)
+    );
 }
 
-void HTTP2_Analyzer::HTTP2_Settings_Event(bool orig, uint32_t stream, RecordVal* settingsRecord) {
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(settingsRecord);
+void HTTP2_Analyzer::HTTP2_Settings_Event(bool orig, uint32_t stream, zeek::RecordValPtr settingsRecord) {
     DEBUG_INFO("http2_settings_event\n");
-    this->ConnectionEvent(http2_settings_event, vl);
+    this->EnqueueConnEvent(
+        http2_settings_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        settingsRecord
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigned pushStream,
                                              uint32_t len, const char* headerData){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetCount(pushStream));
-    vl->append(val_mgr->GetCount(len));
-    vl->append(new StringVal(len, headerData));
     DEBUG_INFO("http2_pushpromise_event\n");
-    this->ConnectionEvent(http2_pushpromise_event, vl);
+    this->EnqueueConnEvent(
+        http2_pushpromise_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Count(pushStream),
+        zeek::val_mgr->Count(len),
+        zeek::make_intrusive<zeek::StringVal>(len, headerData)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_Ping_Event(bool orig, unsigned stream, uint8_t length, const char* data){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(new StringVal(length, data));
     DEBUG_INFO("http2_ping_event\n");
-    this->ConnectionEvent(http2_ping_event, vl);
+    this->EnqueueConnEvent(
+        http2_ping_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::make_intrusive<zeek::StringVal>(length, data)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_GoAway_Event(bool orig, unsigned stream, unsigned lastStream,
                                         const std::string& error, uint32_t length, const char* data){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetCount(lastStream));
-    vl->append(new StringVal(error));
     DEBUG_INFO("http2_goaway_event\n");
-    this->ConnectionEvent(http2_goaway_event, vl);
+    this->EnqueueConnEvent(
+        http2_goaway_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Count(lastStream),
+        zeek::make_intrusive<zeek::StringVal>(error)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_WindowUpdate_Event(bool orig, unsigned stream, unsigned increment){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetCount(increment));
     DEBUG_INFO("http2_windowupdate_event\n");
-    this->ConnectionEvent(http2_windowupdate_event, vl);
+    this->EnqueueConnEvent(
+        http2_windowupdate_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Count(increment)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_Continuation_Event(bool orig, unsigned stream, uint32_t len, const char* headerData){
-    val_list* vl = new val_list();
-    vl->append(this->BuildConnVal());
-    vl->append(val_mgr->GetBool(orig));
-    vl->append(val_mgr->GetCount(stream));
-    vl->append(val_mgr->GetCount(len));
-    vl->append(new StringVal(len, headerData));
     DEBUG_INFO("http2_continuation_event\n");
-    this->ConnectionEvent(http2_continuation_event, vl);
+    this->EnqueueConnEvent(
+        http2_continuation_event,
+        this->ConnVal(),
+        zeek::val_mgr->Bool(orig),
+        zeek::val_mgr->Count(stream),
+        zeek::val_mgr->Count(len),
+        zeek::make_intrusive<zeek::StringVal>(len, headerData)
+    );
 }
 
 void HTTP2_Analyzer::HTTP2_Event(std::string& category, std::string& detail){
-    if ( http2_event ){
-        val_list* vl = new val_list();
-        vl->append(this->BuildConnVal());
-        vl->append(new StringVal(category));
-        vl->append(new StringVal(detail));
-
+    if (http2_event) {
         DEBUG_DBG("http2_event\n");
-        this->ConnectionEvent(http2_event, vl);
+        this->EnqueueConnEvent(
+            http2_event,
+            this->ConnVal(),
+            zeek::make_intrusive<zeek::StringVal>(category),
+            zeek::make_intrusive<zeek::StringVal>(detail)
+        );
     }
 }

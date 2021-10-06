@@ -3,16 +3,17 @@
 
 #include <string>
 #include <unordered_map>
-#include "analyzer/protocol/tcp/TCP.h"
-#include "analyzer/protocol/tcp/ContentLine.h"
-#include "analyzer/protocol/pia/PIA.h"
-#include "analyzer/protocol/zip/ZIP.h"
-#include "analyzer/protocol/mime/MIME.h"
-#include "IPAddr.h"
+#include "zeek/ZeekString.h"
+#include "zeek/analyzer/protocol/tcp/TCP.h"
+#include "zeek/analyzer/protocol/tcp/ContentLine.h"
+#include "zeek/analyzer/protocol/pia/PIA.h"
+#include "zeek/analyzer/protocol/zip/ZIP.h"
+#include "zeek/analyzer/protocol/mime/MIME.h"
+#include "zeek/IPAddr.h"
 #include "events.bif.h"
 #include "http2.bif.h"
 #include "debug.h"
-#include "Reporter.h"
+#include "zeek/Reporter.h"
 
 
 #include "HTTP2_FrameReassembler.h"
@@ -29,9 +30,9 @@ namespace analyzer { namespace mitrecnd {
 class HTTP2_Stream;
 class HTTP2_HalfStream;
 
-class HTTP2_Analyzer : public tcp::TCP_ApplicationAnalyzer {
+class HTTP2_Analyzer : public zeek::analyzer::tcp::TCP_ApplicationAnalyzer {
 public:
-    HTTP2_Analyzer(Connection* conn);
+    HTTP2_Analyzer(zeek::Connection* conn);
     virtual ~HTTP2_Analyzer();
 
     // Overriden from Analyzer.
@@ -75,7 +76,7 @@ public:
      */
     virtual void EndpointEOF(bool is_orig);
 
-    static analyzer::Analyzer* InstantiateAnalyzer(Connection* conn)
+    static zeek::analyzer::Analyzer* InstantiateAnalyzer(zeek::Connection* conn)
         { return new HTTP2_Analyzer(conn); }
 
     // Utility
@@ -104,7 +105,7 @@ public:
      */
     void HTTP2_Request(bool orig, unsigned stream, std::string& method,
                        std::string& authority, std::string&  host,
-                       std::string& path,  BroString*  unescaped,
+                       std::string& path,  zeek::String*  unescaped,
                        bool push=false);
     /**
      * void HTTP2_Analyzer::HTTP2_Reply(bool orig, unsigned stream, Val *status)
@@ -142,7 +143,7 @@ public:
      *                  originator or receiver.
      * @param stream    unique identifier for the stream.
      */
-    void HTTP2_StreamEnd(unsigned stream, RecordVal* stream_stats);
+    void HTTP2_StreamEnd(unsigned stream, zeek::RecordValPtr stream_stats);
     /**
      * Description: Notification to Bro that an HTTP2 Header event
      * has occurred.
@@ -168,7 +169,7 @@ public:
      * @param stream    unique identifier for the stream.
      * @param hlist     reference to list of header name value pairs.
      */
-    void HTTP2_AllHeaders(bool orig, unsigned stream, TableVal* hlist);
+    void HTTP2_AllHeaders(bool orig, unsigned stream, zeek::TableValPtr hlist);
     /**
      * void HTTP2_Analyzer::HTTP2_BeginEntity(bool orig, unsigned
      * stream, std::string contentType)
@@ -288,7 +289,7 @@ public:
      */
     void HTTP2_RstStream_Event(bool orig, unsigned stream, const std::string& error);
     /**
-     * void HTTP2_Analyzer::HTTP2_Settings_Event(bool orig, unsigned stream, RecordVal* settingsRecord)
+     * void HTTP2_Analyzer::HTTP2_Settings_Event(bool orig, unsigned stream, RecordValPtr settingsRecord)
      *
      * Description: Notification to Bro that an HTTP2 Settings frame
      * has been received.
@@ -299,7 +300,7 @@ public:
      * @param stream          unique identifier for the stream.
      * @param settingsRecord  current settings configuration.
      */
-    void HTTP2_Settings_Event(bool orig, uint32_t stream, RecordVal* settingsRecord);
+    void HTTP2_Settings_Event(bool orig, uint32_t stream, zeek::RecordValPtr settingsRecord);
     /**
      * void HTTP2_Analyzer::HTTP2_PushPromise_Event(bool orig, unsigned stream, unsigned pushStream)
      *

@@ -1,8 +1,9 @@
 #ifndef ANALYZER_PROTOCOL_HTTP2_HTTP2_STREAM_H
 #define ANALYZER_PROTOCOL_HTTP2_HTTP2_STREAM_H
 
-#include "analyzer/protocol/zip/ZIP.h"
-#include "util.h"
+#include "zeek/analyzer/protocol/zip/ZIP.h"
+#include "zeek/util.h"
+
 #include "decode.h"
 #include "nghttp2.h"
 #include "nghttp2ver.h"
@@ -10,7 +11,6 @@
 #include "HTTP2_HeaderStorage.h"
 #include "HTTP2_Frame.h"
 #include "HTTP2.h"
-
 
 namespace analyzer { namespace mitrecnd {
 
@@ -95,7 +95,7 @@ protected:
     int dataOffset;
     size_t dataBlockCnt;
     size_t data_size;
-    zip::ZIP_Analyzer* zip;
+    zeek::analyzer::zip::ZIP_Analyzer* zip;
     BrotliDecoderState* brotli;
     uint8_t* brotli_buffer;
 
