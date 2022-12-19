@@ -6,6 +6,8 @@ module HTTP2;
 export {
     redef enum Log::ID += { LOG };
 
+    global log_policy: Log::PolicyHook;
+
     ## This setting changes if passwords used in Basic-Auth are captured or
     ## not.
     const default_capture_password = F &redef;
@@ -96,7 +98,7 @@ redef record connection += {
 
 event zeek_init() &priority=5
 {
-    Log::create_stream(HTTP2::LOG, [$columns=Info, $ev=log_http2, $path="http2"]);
+    Log::create_stream(HTTP2::LOG, [$columns=Info, $ev=log_http2, $path="http2", $policy=log_policy]);
     Analyzer::register_for_ports(Analyzer::ANALYZER_HTTP2, ports);
 }
 
