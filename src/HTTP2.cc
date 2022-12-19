@@ -143,7 +143,11 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
             this->initStreams();
             // Create frame reassemblers which will stitch frames together
             this->initReassemblers();
+#if ZEEK_VERSION_NUMBER >= 40200
+            AnalyzerConfirmation(); // Notify system that this is HTTP2.
+#else // < Zeek 4.2
             ProtocolConfirmation(); // Notify system that this is HTTP2.
+#endif
             DEBUG_INFO("Connection Preface Detected: [%p]!\n", Conn());
         }
     }
@@ -155,7 +159,11 @@ void HTTP2_Analyzer::DeliverStream(int len, const u_char* data, bool orig){
             if(*it == nullptr) {
                 // Reassembler will ensure last frame pointer is null, so no other, valid,
                 // frames should be present that need to be to be handled/deleted
+#if ZEEK_VERSION_NUMBER >= 40200
+                AnalyzerViolation("Unable to parse http 2 frame from data stream, fatal error");
+#else // < Zeek 4.2
                 ProtocolViolation("Unable to parse http 2 frame from data stream, fatal error");
+#endif
                 this->protocol_errored = true;
                 return;
             }
