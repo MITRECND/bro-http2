@@ -86,7 +86,8 @@ export {
     ## to the loggin framework.
     global log_http2: event(rec: Info);
 
-    const ports = { 80/tcp, 443/tcp } &redef;
+    ## not required since we use a DPD signature
+    ## const ports = { 80/tcp, 443/tcp } &redef;
 }
 
 # Add the http state tracking fields to the connection record.
@@ -99,7 +100,8 @@ redef record connection += {
 event zeek_init() &priority=5
 {
     Log::create_stream(HTTP2::LOG, [$columns=Info, $ev=log_http2, $path="http2", $policy=log_policy]);
-    Analyzer::register_for_ports(Analyzer::ANALYZER_HTTP2, ports);
+    ## Not required since we use a DPD signature
+    ## Analyzer::register_for_ports(Analyzer::ANALYZER_HTTP2, ports);
 }
 
 
