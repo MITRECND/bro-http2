@@ -9,6 +9,11 @@
 #include "debug.h"
 #include "zeek/Reporter.h"
 
+// Ensure ZEEK_VERSION_NUMBER is defined with Zeek 6.0 and later.
+#if __has_include("zeek/zeek-version.h")
+#include "zeek/zeek-version.h"
+#endif
+
 using namespace analyzer::mitrecnd;
 
 const bool DEBUG_http2 = true;
